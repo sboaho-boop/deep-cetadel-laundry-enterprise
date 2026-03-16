@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { FaTshirt, FaSprayCan, FaSyncAlt, FaTruck, FaWhatsapp, FaFacebook, FaInstagram, FaTwitter, FaMapMarkerAlt, FaPhone, FaEnvelope } from "react-icons/fa";
+import { FaTshirt, FaSprayCan, FaSyncAlt, FaTruck, FaWhatsapp, FaFacebook, FaInstagram, FaTwitter, FaTiktok, FaMapMarkerAlt, FaPhone, FaEnvelope } from "react-icons/fa";
 import { useEffect, useState, useRef } from "react";
 
 // ── Splash Screen ─────────────────────────────────────────────────────────────
@@ -129,7 +129,7 @@ export default function Home() {
   const pricingPlans = [
     {
       name: "Basic",
-      price: "GHS 80",
+      price: "GHS 120",
       period: "/month",
       features: ["Up to 5kg Wash & Fold", "2 Ironing items", "Standard Delivery", "Email Support"],
       color: "#0077b6",
@@ -137,7 +137,7 @@ export default function Home() {
     },
     {
       name: "Pro",
-      price: "GHS 180",
+      price: "GHS 300",
       period: "/month",
       features: ["Up to 15kg Wash & Fold", "10 Ironing items", "2 Dry Clean items", "Express Delivery", "Priority Support"],
       color: "#00d4ff",
@@ -179,7 +179,7 @@ export default function Home() {
           className="whatsapp-btn"
           aria-label="Chat on WhatsApp"
         >
-          <FaWhatsapp size={28} />
+          <FaWhatsapp size={28} /> 
           <span className="wa-tooltip">Chat with us!</span>
         </a>
 
@@ -342,6 +342,7 @@ export default function Home() {
                 <a href="#" aria-label="Facebook"><FaFacebook /></a>
                 <a href="#" aria-label="Instagram"><FaInstagram /></a>
                 <a href="#" aria-label="Twitter"><FaTwitter /></a>
+                <a href="https://www.tiktok.com/@deepcitadellaundry" target="_blank" rel="noopener noreferrer" aria-label="TikTok"><FaTiktok /></a>
                 <a href="https://wa.me/+233244639002" aria-label="WhatsApp"><FaWhatsapp /></a>
               </div>
             </div>
