@@ -1489,7 +1489,7 @@ function LoginView({onLogin}){
       {/* ── Testimonials ── */}
       <section id="testimonials" className="lp-section" style={{background:"#f8faff"}}>
         <h2 className="lp-section-title">What Customers Say</h2>
-        <p className="lp-section-sub">Trusted by hundreds across Accra</p>
+        <p className="lp-section-sub">Trusted by hundreds across Tema and Accra</p>
         <div className="lp-testi-grid">
           {testimonials.map((t,i)=>(
             <div key={i} className="lp-testi" style={{animationDelay:`${i*.1}s`}}>
@@ -1520,7 +1520,7 @@ function LoginView({onLogin}){
             </div>
             <div>
               <div className="lp-footer-co">Deep Citadel Enterprise</div>
-              <div className="lp-footer-tag">Powerful Clean. Trusted Care.</div>
+              <div className="lp-footer-tag">Your Cloths, Our Care.</div>
               <div className="lp-social">
                 {[["Facebook","f"],["Instagram","in"],["TikTok","♪"],["WhatsApp","wa"]].map(([label,ch])=>(
                   <a key={label} href={label==="WhatsApp"?"https://wa.me/+233244639002":"#"} target={label==="WhatsApp"?"_blank":undefined} rel="noopener noreferrer" aria-label={label} style={{fontWeight:700,fontSize:13}}>{ch}</a>
