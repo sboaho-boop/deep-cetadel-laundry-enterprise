@@ -1904,6 +1904,7 @@ function StaffView({role,onLogout,onBack=null,audioUnlocked=false,staffName=null
               {id:"payment",label:"💳 Awaiting Payment", count: orders.filter(o=>o.paymentStatus==="awaiting_confirmation").length, color:"#f59e0b"},
             ].map(fp=>(
               <button key={fp.id} onClick={()=>setOrderFilter(fp.id)}
+              
                 style={{display:"flex",alignItems:"center",gap:6,padding:"7px 14px",borderRadius:20,border:`1px solid ${orderFilter===fp.id?(fp.color||"#00c6e0"):"rgba(255,255,255,.1)"}`,background:orderFilter===fp.id?`${fp.color||"#00c6e0"}18`:"rgba(255,255,255,.03)",color:orderFilter===fp.id?(fp.color||"#00c6e0"):"rgba(255,255,255,.4)",fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:12,cursor:"pointer",transition:"all .2s"}}>
                 {fp.label}
                 {fp.count>0&&<span style={{background:orderFilter===fp.id?(fp.color||"#00c6e0"):"rgba(255,255,255,.12)",color:orderFilter===fp.id?"#020e1a":"rgba(255,255,255,.5)",borderRadius:"50%",minWidth:18,height:18,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:800,padding:"0 4px"}}>{fp.count}</span>}
