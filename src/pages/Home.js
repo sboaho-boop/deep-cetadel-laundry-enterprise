@@ -1765,6 +1765,7 @@ function StaffView({role,onLogout,onBack=null,audioUnlocked=false,staffName=null
   const [cart,setCart]=useState([]);
   const [customer,setCustomer]=useState({name:"",phone:""});
   const [orders,setOrders]=useState(loadOrders);
+  const [orderFilter, setOrderFilter] = useState("")
   const [successInv,setSuccessInv]=useState(null);
   const [paymentTarget,setPaymentTarget]=useState(null);
   const [receiptOrder,setReceiptOrder]=useState(null);
@@ -1773,6 +1774,7 @@ function StaffView({role,onLogout,onBack=null,audioUnlocked=false,staffName=null
   const totalItems=cart.reduce((s,i)=>s+i.qty,0);
   const hasQty=Object.values(quantities).some(q=>q>0);
 
+  const filteredOrders = orders.filter((order) => order.includes(orderFilter))
   const refreshOrders=()=>setOrders(loadOrders());
   const setQty=(service,val)=>{const n=Math.max(0,Math.min(99,isNaN(parseInt(val))?0:parseInt(val)));setQuantities(prev=>({...prev,[service]:n}));};
   const buildOrder=()=>{setCart(Object.entries(quantities).filter(([,q])=>q>0).map(([name,qty])=>({id:`${name}-${Date.now()}`,name,qty,unitPrice:activePrices[name]||0,subtotal:qty*(activePrices[name]||0)})));};
