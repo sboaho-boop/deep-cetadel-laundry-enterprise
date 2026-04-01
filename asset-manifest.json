@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/sboaho-boop/deep-cetadel-laundry-enterprise/static/css/main.bfd96bde.css",
+    "main.js": "/sboaho-boop/deep-cetadel-laundry-enterprise/static/js/main.8ddcf910.js",
+    "index.html": "/sboaho-boop/deep-cetadel-laundry-enterprise/index.html",
+    "main.bfd96bde.css.map": "/sboaho-boop/deep-cetadel-laundry-enterprise/static/css/main.bfd96bde.css.map",
+    "main.8ddcf910.js.map": "/sboaho-boop/deep-cetadel-laundry-enterprise/static/js/main.8ddcf910.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.bfd96bde.css",
+    "static/js/main.8ddcf910.js"
+  ]
+}
