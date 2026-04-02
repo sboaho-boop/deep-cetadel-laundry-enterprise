@@ -1,10 +1,10 @@
 {
   "files": {
-    "main.js": "/deep-cetadel-laundry-enterprise/static/js/main.13d96850.js",
+    "main.js": "/deep-cetadel-laundry-enterprise/static/js/main.3a642f88.js",
     "index.html": "/deep-cetadel-laundry-enterprise/index.html",
-    "main.13d96850.js.map": "/deep-cetadel-laundry-enterprise/static/js/main.13d96850.js.map"
+    "main.3a642f88.js.map": "/deep-cetadel-laundry-enterprise/static/js/main.3a642f88.js.map"
   },
   "entrypoints": [
-    "static/js/main.13d96850.js"
+    "static/js/main.3a642f88.js"
   ]
 }
