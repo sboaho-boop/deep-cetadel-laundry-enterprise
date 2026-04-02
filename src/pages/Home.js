@@ -1765,7 +1765,7 @@ function StaffView({role,onLogout,onBack=null,audioUnlocked=false,staffName=null
   const [cart,setCart]=useState([]);
   const [customer,setCustomer]=useState({name:"",phone:""});
   const [orders,setOrders]=useState(loadOrders);
-  const [orderFilter, setOrderFilter] = useState("")
+  const [orderFilter, setOrderFilter] = useState("all")
   const [successInv,setSuccessInv]=useState(null);
   const [paymentTarget,setPaymentTarget]=useState(null);
   const [receiptOrder,setReceiptOrder]=useState(null);
@@ -1774,7 +1774,18 @@ function StaffView({role,onLogout,onBack=null,audioUnlocked=false,staffName=null
   const totalItems=cart.reduce((s,i)=>s+i.qty,0);
   const hasQty=Object.values(quantities).some(q=>q>0);
 
-  const filteredOrders = orders.filter((order) => order.includes(orderFilter))
+  const filteredOrders = orders.filter((order) => {
+    if (orderFilter === "" || orderFilter === "all")
+      return order.stage !== "collected" && order.stage !== "pickup_delivered";
+    if (orderFilter === "pickup")
+      return isPickupOrder(order) && order.stage !== "pickup_delivered";
+    if (orderFilter === "regular")
+      return !isPickupOrder(order) && order.stage !== "collected";
+    if (orderFilter === "payment")
+      return order.paymentStatus === "awaiting_confirmation";
+    return true;
+  });
+
   const refreshOrders=()=>setOrders(loadOrders());
   const setQty=(service,val)=>{const n=Math.max(0,Math.min(99,isNaN(parseInt(val))?0:parseInt(val)));setQuantities(prev=>({...prev,[service]:n}));};
   const buildOrder=()=>{setCart(Object.entries(quantities).filter(([,q])=>q>0).map(([name,qty])=>({id:`${name}-${Date.now()}`,name,qty,unitPrice:activePrices[name]||0,subtotal:qty*(activePrices[name]||0)})));};
@@ -1906,7 +1917,6 @@ function StaffView({role,onLogout,onBack=null,audioUnlocked=false,staffName=null
               {id:"payment",label:"💳 Awaiting Payment", count: orders.filter(o=>o.paymentStatus==="awaiting_confirmation").length, color:"#f59e0b"},
             ].map(fp=>(
               <button key={fp.id} onClick={()=>setOrderFilter(fp.id)}
-              
                 style={{display:"flex",alignItems:"center",gap:6,padding:"7px 14px",borderRadius:20,border:`1px solid ${orderFilter===fp.id?(fp.color||"#00c6e0"):"rgba(255,255,255,.1)"}`,background:orderFilter===fp.id?`${fp.color||"#00c6e0"}18`:"rgba(255,255,255,.03)",color:orderFilter===fp.id?(fp.color||"#00c6e0"):"rgba(255,255,255,.4)",fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:12,cursor:"pointer",transition:"all .2s"}}>
                 {fp.label}
                 {fp.count>0&&<span style={{background:orderFilter===fp.id?(fp.color||"#00c6e0"):"rgba(255,255,255,.12)",color:orderFilter===fp.id?"#020e1a":"rgba(255,255,255,.5)",borderRadius:"50%",minWidth:18,height:18,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:800,padding:"0 4px"}}>{fp.count}</span>}
@@ -1997,7 +2007,6 @@ function StaffView({role,onLogout,onBack=null,audioUnlocked=false,staffName=null
     </div>
   );
 }
-
 // ══════════════════════════════════════════════════════════════════════════════
 // STAFF MANAGEMENT  (owner-only)
 // ══════════════════════════════════════════════════════════════════════════════
