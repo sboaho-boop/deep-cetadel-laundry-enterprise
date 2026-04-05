@@ -212,11 +212,13 @@ function Particles(){
 // ── Shared UI pieces ──────────────────────────────────────────────────────────
 function DCLogo({size="md"}){
   const big=size==="lg";
+  const dim=big?80:42;
   return(
     <div style={{textAlign:"center",marginBottom:big?28:0}}>
-      <div style={{width:big?80:42,height:big?80:42,borderRadius:big?"50%":"12px",margin:big?"0 auto 16px":0,background:"linear-gradient(135deg,#0077b6,#00c6e0)",display:"flex",alignItems:"center",justifyContent:"center",animation:big?"logoGlow 3s ease-in-out infinite":"none",boxShadow:"0 0 20px rgba(0,198,224,.4)",position:"relative",flexShrink:0}}>
-        {big&&<div style={{position:"absolute",inset:-4,borderRadius:"50%",border:"2px solid transparent",borderTopColor:"#00c6e0",borderRightColor:"rgba(0,198,224,.3)",animation:"spin 3s linear infinite"}}/>}
-        <span style={{fontFamily:"'Cinzel',serif",color:"#fff",fontSize:big?26:15,fontWeight:700,letterSpacing:-1}}>DC</span>
+      <div style={{width:dim,height:dim,borderRadius:big?"50%":"12px",margin:big?"0 auto 16px":0,background:"linear-gradient(135deg,#0077b6,#00c6e0)",display:"flex",alignItems:"center",justifyContent:"center",animation:big?"logoGlow 3s ease-in-out infinite":"none",boxShadow:"0 0 20px rgba(0,198,224,.4)",position:"relative",flexShrink:0,overflow:"hidden"}}>
+        {big&&<div style={{position:"absolute",inset:-4,borderRadius:"50%",border:"2px solid transparent",borderTopColor:"#00c6e0",borderRightColor:"rgba(0,198,224,.3)",animation:"spin 3s linear infinite",zIndex:1}}/>}
+        <img src="/logo.jpg" alt="Deep Citadel Logo" style={{width:"100%",height:"100%",objectFit:"cover",borderRadius:big?"50%":"12px"}} onError={(e)=>{e.target.style.display="none";e.target.nextSibling.style.display="flex";}}/>
+        <span style={{fontFamily:"'Cinzel',serif",color:"#fff",fontSize:big?26:15,fontWeight:700,letterSpacing:-1,display:"none",position:"absolute"}}>DC</span>
       </div>
       {big&&<><h1 style={{fontFamily:"'Cinzel',serif",color:"#fff",fontSize:22,letterSpacing:1,margin:"0 0 4px"}}>Deep Citadel</h1><p style={{color:"rgba(255,255,255,.35)",fontSize:12,letterSpacing:2,textTransform:"uppercase"}}>Laundry Services</p></>}
     </div>

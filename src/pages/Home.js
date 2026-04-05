@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import MapPicker, { MapView } from "../components/MapPicker";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const PRICE_KEY  = "dcl_prices";
@@ -224,11 +225,13 @@ function Particles(){
 // ── Shared UI pieces ──────────────────────────────────────────────────────────
 function DCLogo({size="md"}){
   const big=size==="lg";
+  const dim=big?80:42;
   return(
     <div style={{textAlign:"center",marginBottom:big?28:0}}>
-      <div style={{width:big?80:42,height:big?80:42,borderRadius:big?"50%":"12px",margin:big?"0 auto 16px":0,background:"linear-gradient(135deg,#0077b6,#00c6e0)",display:"flex",alignItems:"center",justifyContent:"center",animation:big?"logoGlow 3s ease-in-out infinite":"none",boxShadow:"0 0 20px rgba(0,198,224,.4)",position:"relative",flexShrink:0}}>
-        {big&&<div style={{position:"absolute",inset:-4,borderRadius:"50%",border:"2px solid transparent",borderTopColor:"#00c6e0",borderRightColor:"rgba(0,198,224,.3)",animation:"spin 3s linear infinite"}}/>}
-        <span style={{fontFamily:"'Cinzel',serif",color:"#fff",fontSize:big?26:15,fontWeight:700,letterSpacing:-1}}>DC</span>
+      <div style={{width:dim,height:dim,borderRadius:big?"50%":"12px",margin:big?"0 auto 16px":0,background:"linear-gradient(135deg,#0077b6,#00c6e0)",display:"flex",alignItems:"center",justifyContent:"center",animation:big?"logoGlow 3s ease-in-out infinite":"none",boxShadow:"0 0 20px rgba(0,198,224,.4)",position:"relative",flexShrink:0,overflow:"hidden"}}>
+        {big&&<div style={{position:"absolute",inset:-4,borderRadius:"50%",border:"2px solid transparent",borderTopColor:"#00c6e0",borderRightColor:"rgba(0,198,224,.3)",animation:"spin 3s linear infinite",zIndex:1}}/>}
+        <img src="/logo.jpg" alt="Deep Citadel Logo" style={{width:"100%",height:"100%",objectFit:"cover",borderRadius:big?"50%":"12px"}} onError={(e)=>{e.target.style.display="none";e.target.nextSibling.style.display="flex";}}/>
+        <span style={{fontFamily:"'Cinzel',serif",color:"#fff",fontSize:big?26:15,fontWeight:700,letterSpacing:-1,display:"none",position:"absolute"}}>DC</span>
       </div>
       {big&&<><h1 style={{fontFamily:"'Cinzel',serif",color:"#fff",fontSize:22,letterSpacing:1,margin:"0 0 4px"}}>Deep Citadel</h1><p style={{color:"rgba(255,255,255,.35)",fontSize:12,letterSpacing:2,textTransform:"uppercase"}}>Laundry Services</p></>}
     </div>
@@ -633,6 +636,13 @@ function SchedulePickupModal({ customer, onClose, onSubmit }) {
   const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate()+1);
   const minDate = tomorrow.toISOString().slice(0,10);
 
+  const services = [
+    { name: "Wash & Fold", price: 15, unit: "per kg", color: "#4cc9f0" },
+    { name: "Dry Cleaning", price: 25, unit: "per item", color: "#4895ef" },
+    { name: "Ironing Only", price: 10, unit: "per item", color: "#4361ee" },
+    { name: "Duvet / Large", price: 35, unit: "per item", color: "#7209b7" },
+  ];
+
   const [form, setForm] = useState({
     name: customer?.name||"",
     date: minDate,
@@ -642,6 +652,8 @@ function SchedulePickupModal({ customer, onClose, onSubmit }) {
     items: "",
     phone: customer?.phone||"",
   });
+  const [location, setLocation] = useState(null);
+  const [selectedServices, setSelectedServices] = useState({});
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
@@ -650,11 +662,37 @@ function SchedulePickupModal({ customer, onClose, onSubmit }) {
     "13:00","14:00","15:00","16:00","17:00","18:00",
   ];
 
+  const toggleService = (name) => {
+    setSelectedServices(prev => {
+      if (prev[name]) {
+        const updated = { ...prev };
+        delete updated[name];
+        return updated;
+      }
+      return { ...prev, [name]: 1 };
+    });
+    setErrors(p => ({ ...p, items: "" }));
+  };
+
+  const updateServiceQty = (name, delta) => {
+    setSelectedServices(prev => ({
+      ...prev,
+      [name]: Math.max(1, (prev[name] || 1) + delta)
+    }));
+  };
+
+  const selectedServicesList = Object.entries(selectedServices).map(([name, qty]) => {
+    const svc = services.find(s => s.name === name);
+    return { name, qty, price: svc?.price || 0, unit: svc?.unit || "" };
+  });
+
+  const totalEstimate = selectedServicesList.reduce((sum, s) => sum + (s.price * s.qty), 0);
+
   const validate = () => {
     const e = {};
     if (!form.name.trim())    e.name    = "Your name is required.";
-    if (!form.address.trim()) e.address = "Pickup address is required.";
-    if (!form.items.trim())   e.items   = "Please describe what needs cleaning.";
+    if (!location) e.address = "Please pin your pickup location on the map.";
+    if (Object.keys(selectedServices).length === 0) e.items = "Please select at least one service.";
     if (!form.phone.trim())   e.phone   = "Phone number is required.";
     return e;
   };
@@ -674,16 +712,17 @@ function SchedulePickupModal({ customer, onClose, onSubmit }) {
         pickup: {
           date: form.date,
           time: form.time,
-          address: form.address.trim(),
+          address: form.address.trim() || "Location pinned on map",
           addressNote: form.addressNote.trim(),
-          itemsDescription: form.items.trim(),
+          location: location,
           scheduledAt: new Date().toISOString(),
         },
-        items: [{ name: "Pickup Service", qty: 1, unitPrice: 0, subtotal: 0, note: form.items.trim() }],
-        total: 0,
+        assignedStaff: null,
+        items: selectedServicesList.map(s => ({ name: s.name, qty: s.qty, unitPrice: s.price, unit: s.unit, subtotal: s.price * s.qty })),
+        total: totalEstimate,
         stage: "pickup_scheduled",
         createdAt: new Date().toISOString(),
-        paymentStatus: "pending", // pending | awaiting_confirmation | confirmed
+        paymentStatus: "pending",
       };
       const updated = [...existing, pickupOrder];
       saveOrders(updated);
@@ -751,24 +790,75 @@ function SchedulePickupModal({ customer, onClose, onSubmit }) {
           </div>
           {errors.phone&&<p style={{color:"#fca5a5",fontSize:11,marginBottom:12,display:"flex",gap:4,alignItems:"center"}}><Icon.Alert/>{errors.phone}</p>}
 
-          {/* Address */}
-          <label style={{display:"block",fontSize:11,color:"rgba(255,255,255,.4)",letterSpacing:1.2,textTransform:"uppercase",marginBottom:8}}>Pickup Address *</label>
-          <div style={{position:"relative",marginBottom:errors.address?4:12}}>
-            <span style={{position:"absolute",left:14,top:14,color:"rgba(255,255,255,.3)",display:"flex",fontSize:14}}>📍</span>
-            <input type="text" placeholder="Street address, area, landmark…" value={form.address} onChange={e=>f("address",e.target.value)}
-              style={{...inputBase(errors.address), paddingLeft:42}}/>
-          </div>
-          {errors.address&&<p style={{color:"#fca5a5",fontSize:11,marginBottom:8,display:"flex",gap:4,alignItems:"center"}}><Icon.Alert/>{errors.address}</p>}
+          {/* Map Location */}
+          <label style={{display:"block",fontSize:11,color:"rgba(255,255,255,.4)",letterSpacing:1.2,textTransform:"uppercase",marginBottom:8}}>Pickup Location *</label>
+          <MapPicker 
+            value={location} 
+            onChange={(loc) => { setLocation(loc); setErrors(p => ({...p, address: ""})); }} 
+            height={220}
+          />
+          {errors.address&&<p style={{color:"#fca5a5",fontSize:11,marginTop:4,marginBottom:8,display:"flex",gap:4,alignItems:"center"}}><Icon.Alert/>{errors.address}</p>}
 
-          {/* Address note */}
-          <input type="text" placeholder="Additional directions (optional) — e.g. Green gate, 2nd floor…" value={form.addressNote} onChange={e=>f("addressNote",e.target.value)}
+          {/* Address text */}
+          <input type="text" placeholder="Address label (e.g. Kwabena's House, East Legon)…" value={form.address} onChange={e=>f("address",e.target.value)}
+            style={{...inputBase(false), marginBottom:10, fontSize:12}}/>
+          <input type="text" placeholder="Landmark / extra directions (optional)" value={form.addressNote} onChange={e=>f("addressNote",e.target.value)}
             style={{...inputBase(false), marginBottom:16, fontSize:12, color:"rgba(255,255,255,.6)"}}/>
 
-          {/* Items */}
-          <label style={{display:"block",fontSize:11,color:"rgba(255,255,255,.4)",letterSpacing:1.2,textTransform:"uppercase",marginBottom:8}}>What needs cleaning? *</label>
-          <textarea placeholder="e.g. 5 shirts, 2 trousers, 1 duvet — give our team an idea so we can prepare…" value={form.items} onChange={e=>f("items",e.target.value)}
-            rows={3} style={{...inputBase(errors.items), marginBottom:errors.items?4:8, resize:"vertical", lineHeight:1.6}}/>
+          {/* Service Selection */}
+          <label style={{display:"block",fontSize:11,color:"rgba(255,255,255,.4)",letterSpacing:1.2,textTransform:"uppercase",marginBottom:8}}>Select Services *</label>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:errors.items?4:12}}>
+            {services.map(svc => {
+              const isSelected = !!selectedServices[svc.name];
+              return (
+                <div
+                  key={svc.name}
+                  onClick={() => toggleService(svc.name)}
+                  style={{
+                    padding:"14px 12px",
+                    borderRadius:14,
+                    border:`2px solid ${isSelected ? svc.color : "rgba(255,255,255,.1)"}`,
+                    background: isSelected ? `${svc.color}18` : "rgba(255,255,255,.03)",
+                    cursor:"pointer",
+                    transition:"all .2s ease",
+                    position:"relative",
+                  }}
+                >
+                  {isSelected && (
+                    <div style={{position:"absolute",top:8,right:8,width:18,height:18,borderRadius:"50%",background:svc.color,display:"flex",alignItems:"center",justifyContent:"center"}}>
+                      <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    </div>
+                  )}
+                  <div style={{fontWeight:700,fontSize:12,color:"#fff",marginBottom:4}}>{svc.name}</div>
+                  <div style={{fontSize:15,fontWeight:800,color:svc.color}}>GHS {svc.price}</div>
+                  <div style={{fontSize:10,color:"rgba(255,255,255,.4)",marginTop:2}}>{svc.unit}</div>
+                  {isSelected && (
+                    <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:12,marginTop:10,background:"rgba(0,0,0,.2)",borderRadius:10,padding:"6px 0"}}
+                      onClick={e => e.stopPropagation()}>
+                      <button onClick={() => updateServiceQty(svc.name, -1)}
+                        style={{width:28,height:28,borderRadius:8,border:"none",background:"rgba(255,255,255,.15)",color:"#fff",fontSize:16,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>-</button>
+                      <span style={{fontWeight:800,fontSize:14,color:"#fff",minWidth:24,textAlign:"center"}}>{selectedServices[svc.name]}</span>
+                      <button onClick={() => updateServiceQty(svc.name, 1)}
+                        style={{width:28,height:28,borderRadius:8,border:"none",background:svc.color,color:"#fff",fontSize:16,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>+</button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
           {errors.items&&<p style={{color:"#fca5a5",fontSize:11,marginBottom:8,display:"flex",gap:4,alignItems:"center"}}><Icon.Alert/>{errors.items}</p>}
+          {Object.keys(selectedServices).length > 0 && (
+            <div style={{background:"rgba(16,185,129,.08)",border:"1px solid rgba(16,185,129,.2)",borderRadius:12,padding:"10px 14px",marginBottom:16,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <span style={{fontSize:12,color:"rgba(255,255,255,.5)"}}>Estimated Total</span>
+              <span style={{fontSize:18,fontWeight:800,color:"#10b981"}}>GHS {totalEstimate}</span>
+            </div>
+          )}
+
+          {/* Special Instructions */}
+          <label style={{display:"block",fontSize:11,color:"rgba(255,255,255,.4)",letterSpacing:1.2,textTransform:"uppercase",marginBottom:8}}>Special Instructions (Optional)</label>
+          <textarea placeholder="Any special notes? e.g. delicate fabrics, specific requests…" value={form.items} onChange={e=>f("items",e.target.value)}
+            rows={2} style={{...inputBase(false), marginBottom:16, resize:"vertical", lineHeight:1.6}}/>
+
 
           {/* Info box */}
           <div style={{background:"rgba(99,102,241,.07)",border:"1px solid rgba(99,102,241,.2)",borderRadius:12,padding:"12px 14px",marginBottom:24}}>
@@ -959,6 +1049,66 @@ function PickupPaymentModal({ onClose }) {
                 ))}
               </div>
             </div>
+
+            {/* MoMo Payment Instructions */}
+            {method === "momo" && (
+              <div style={{background:"rgba(245,158,11,.06)",border:"1px solid rgba(245,158,11,.2)",borderRadius:14,padding:"16px",marginBottom:18}}>
+                <div style={{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:13,color:"#f59e0b",marginBottom:12,display:"flex",alignItems:"center",gap:8}}>
+                  <span style={{fontSize:18}}>📱</span> MTN Mobile Money Payment
+                </div>
+                
+                {/* IMPORTANT - Invoice Reference */}
+                <div style={{background:"rgba(239,68,68,.15)",border:"2px solid #ef4444",borderRadius:12,padding:"14px",marginBottom:14}}>
+                  <div style={{fontSize:12,fontWeight:700,color:"#fca5a5",textTransform:"uppercase",letterSpacing:1,marginBottom:8,display:"flex",alignItems:"center",gap:6}}>
+                    <span style={{fontSize:16}}>⚠️</span> IMPORTANT — Use Invoice as Payment Reference
+                  </div>
+                  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",background:"rgba(0,0,0,.4)",borderRadius:8,padding:"12px 14px"}}>
+                    <div>
+                      <div style={{fontSize:11,color:"rgba(255,255,255,.5)",marginBottom:4}}>Your Payment Reference:</div>
+                      <div style={{fontSize:20,color:"#fff",fontFamily:"monospace",fontWeight:800,letterSpacing:1}}>{order?.invoiceNumber}</div>
+                    </div>
+                    <button onClick={()=>navigator.clipboard?.writeText(order?.invoiceNumber)} style={{padding:"8px 16px",borderRadius:8,border:"1px solid rgba(255,255,255,.2)",background:"rgba(255,255,255,.1)",color:"#fff",fontSize:12,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:600}}>📋 Copy</button>
+                  </div>
+                  <div style={{fontSize:11,color:"rgba(255,255,255,.5)",marginTop:10,lineHeight:1.5}}>
+                    You <strong style={{color:"#fca5a5"}}>MUST</strong> enter this invoice number as the payment note/reference when sending money. Without it, we cannot verify your payment.
+                  </div>
+                </div>
+
+                {/* Step 1 - How to Pay */}
+                <div style={{background:"rgba(0,0,0,.2)",borderRadius:10,padding:"12px 14px",marginBottom:10}}>
+                  <div style={{fontSize:11,fontWeight:700,color:"#00c6e0",textTransform:"uppercase",letterSpacing:1,marginBottom:10}}>How to Pay</div>
+                  <div style={{fontSize:12,color:"rgba(255,255,255,.6)",lineHeight:1.8}}>
+                    <div>1. Dial <strong style={{color:"#fff"}}>*170#</strong></div>
+                    <div>2. Select <strong style={{color:"#fff"}}>Wallet & Payments</strong></div>
+                    <div>3. Choose <strong style={{color:"#fff"}}>Pay Merchant</strong> and enter:</div>
+                  </div>
+                </div>
+
+                {/* Step 2 - Payment Options */}
+                <div style={{background:"rgba(0,0,0,.2)",borderRadius:10,padding:"12px 14px"}}>
+                  <div style={{fontSize:11,fontWeight:700,color:"#00c6e0",textTransform:"uppercase",letterSpacing:1,marginBottom:10}}>Payment Details</div>
+                  <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                    <div style={{display:"flex",alignItems:"center",gap:10}}>
+                      <div style={{width:24,height:24,borderRadius:"50%",background:"rgba(99,102,241,.2)",border:"1px solid #6366f1",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,color:"#818cf8",fontWeight:700,flexShrink:0}}>A</div>
+                      <div>
+                        <div style={{fontSize:11,color:"rgba(255,255,255,.4)",marginBottom:2}}>Option A — Merchant ID</div>
+                        <div style={{fontSize:14,color:"#fff",fontFamily:"monospace",fontWeight:700}}>254345</div>
+                        <div style={{fontSize:11,color:"rgba(255,255,255,.4)"}}>Deep Citadel Laundry</div>
+                      </div>
+                    </div>
+                    <div style={{display:"flex",alignItems:"center",gap:10}}>
+                      <div style={{width:24,height:24,borderRadius:"50%",background:"rgba(99,102,241,.2)",border:"1px solid #6366f1",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,color:"#818cf8",fontWeight:700,flexShrink:0}}>B</div>
+                      <div>
+                        <div style={{fontSize:11,color:"rgba(255,255,255,.4)",marginBottom:2}}>Option B — Personal Number</div>
+                        <div style={{fontSize:14,color:"#fff",fontFamily:"monospace",fontWeight:700}}>0553560016</div>
+                        <div style={{fontSize:11,color:"rgba(255,255,255,.4)"}}>Samuel Gameli</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Amount */}
             <div style={{marginBottom:20}}>
               <label style={{display:"block",fontSize:11,color:"rgba(255,255,255,.4)",letterSpacing:1.2,textTransform:"uppercase",marginBottom:8}}>Amount Tendered (₵)</label>
@@ -971,9 +1121,13 @@ function PickupPaymentModal({ onClose }) {
           </>}
 
           {/* Info banner */}
-          <div style={{background:"rgba(245,158,11,.07)",border:"1px solid rgba(245,158,11,.2)",borderRadius:12,padding:"12px 14px",marginBottom:20}}>
+          <div style={{background: method === "momo" ? "rgba(245,158,11,.07)" : "rgba(245,158,11,.07)",border:"1px solid rgba(245,158,11,.2)",borderRadius:12,padding:"12px 14px",marginBottom:20}}>
             <div style={{fontSize:12,color:"rgba(255,215,100,.7)",lineHeight:1.6}}>
-              ⏱️ After submitting, your payment will be <strong style={{color:"#f59e0b"}}>confirmed within 5 minutes</strong> by our team. You'll see a confirmation status on your tracking page.
+              {method === "momo" ? (
+                <>📱 After sending payment via MoMo, click <strong style={{color:"#f59e0b"}}>Submit Payment</strong> to notify us. Your payment will be <strong style={{color:"#f59e0b"}}>confirmed within 5 minutes</strong>.</>
+              ) : (
+                <>⏱️ After submitting, your payment will be <strong style={{color:"#f59e0b"}}>confirmed within 5 minutes</strong> by our team. You'll see a confirmation status on your tracking page.</>
+              )}
             </div>
           </div>
 
@@ -1387,7 +1541,7 @@ function LoginView({onLogin}){
       <nav className="lp-nav" ref={navRef}>
         <div className="lp-nav-left">
           <div className="lp-nav-logo-ring">
-            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='38' fill='%230077b6'/%3E%3Ctext x='50%25' y='56%25' dominant-baseline='middle' text-anchor='middle' fill='white' font-family='serif' font-size='26' font-weight='bold'%3EDC%3C/text%3E%3C/svg%3E" alt="DC Logo"/>
+            <img src="/logo.jpg" alt="DC Logo"/>
           </div>
           <span className="lp-nav-brand">Deep Citadel</span>
         </div>
@@ -1431,7 +1585,7 @@ function LoginView({onLogin}){
         <div className="lp-hero-overlay"/>
         <div className={`lp-hero-content${loaded?" loaded":""}`}>
           <div className="lp-hero-logo">
-            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='38' fill='%230077b6'/%3E%3Ctext x='50%25' y='56%25' dominant-baseline='middle' text-anchor='middle' fill='white' font-family='serif' font-size='26' font-weight='bold'%3EDC%3C/text%3E%3C/svg%3E" alt="Deep Citadel"/>
+            <img src="/logo.jpg" alt="Deep Citadel"/>
           </div>
           <h1 className="lp-hero-title">Smart Laundry &<br/>Delivery Service</h1>
           <p className="lp-hero-sub">Book pickup, track your order & pay — all in one place.</p>
@@ -1516,7 +1670,7 @@ function LoginView({onLogin}){
         <div className="lp-footer-top">
           <div className="lp-footer-brand">
             <div className="lp-footer-logo-ring">
-              <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='38' fill='%230077b6'/%3E%3Ctext x='50%25' y='56%25' dominant-baseline='middle' text-anchor='middle' fill='white' font-family='serif' font-size='26' font-weight='bold'%3EDC%3C/text%3E%3C/svg%3E" alt="DC"/>
+              <img src="/logo.jpg" alt="DC"/>
             </div>
             <div>
               <div className="lp-footer-co">Deep Citadel Enterprise</div>
@@ -1769,6 +1923,8 @@ function StaffView({role,onLogout,onBack=null,audioUnlocked=false,staffName=null
   const [successInv,setSuccessInv]=useState(null);
   const [paymentTarget,setPaymentTarget]=useState(null);
   const [receiptOrder,setReceiptOrder]=useState(null);
+  const [selectedPickup, setSelectedPickup] = useState(null);
+  const [staffList, setStaffList] = useState(loadStaff);
 
   const totalAmount=cart.reduce((s,i)=>s+i.subtotal,0);
   const totalItems=cart.reduce((s,i)=>s+i.qty,0);
@@ -1813,19 +1969,29 @@ function StaffView({role,onLogout,onBack=null,audioUnlocked=false,staffName=null
     setPaymentTarget(null);
   };
 
-  const tabBtn=(id,label,icon)=>(
+  const tabBtn=(id,label,icon,badge=null)=>(
     <button onClick={()=>setTab(id)} style={{display:"flex",alignItems:"center",gap:7,padding:"9px 18px",borderRadius:11,border:`1px solid ${tab===id?"rgba(0,198,224,.4)":"rgba(255,255,255,.08)"}`,background:tab===id?"rgba(0,198,224,.12)":"rgba(255,255,255,.03)",color:tab===id?"#00c6e0":"rgba(255,255,255,.4)",fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:13,cursor:"pointer",transition:"all .2s"}}>
       {icon} {label}
-      {id==="orders"&&orders.filter(o=>o.stage!=="collected").length>0&&<span style={{background:"#00c6e0",color:"#020e1a",borderRadius:"50%",width:18,height:18,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:800}}>{orders.filter(o=>o.stage!=="collected").length}</span>}
+      {badge>0&&<span style={{background:"#00c6e0",color:"#020e1a",borderRadius:"50%",width:18,height:18,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:800}}>{badge}</span>}
     </button>
   );
+
+  const pendingPickups = orders.filter(o => isPickupOrder(o) && o.stage !== "pickup_delivered" && o.stage !== "pickup_collected");
+
+  const assignStaff = (orderId, staffId) => {
+    const updated = loadOrders().map(o => o.id === orderId ? { ...o, assignedStaff: staffId } : o);
+    saveOrders(updated);
+    setOrders(updated);
+    setSelectedPickup(prev => prev ? { ...prev, assignedStaff: staffId } : null);
+    pushToast({ icon:"👤", title:"Staff Assigned", message:`${staffList.find(s => s.id === staffId)?.name || "Unknown"} assigned to pickup.`, accent:"#818cf8", border:"rgba(129,140,248,.4)", duration:3000 });
+  };
 
   return(
     <div style={{position:"relative",zIndex:1,minHeight:"100vh",fontFamily:"'DM Sans',sans-serif",padding:"22px 28px",color:"#e8f4f8"}}>
       {paymentTarget&&<PaymentModal order={paymentTarget} onClose={()=>setPaymentTarget(null)} onPaid={recordPayment}/>}
       {receiptOrder&&<DigitalReceipt order={receiptOrder} onClose={()=>setReceiptOrder(null)}/>}
       <TopNav role={role} subtitle={staffName?`Staff Terminal · ${staffName}`:"Staff Terminal"} onLogout={onLogout} onBack={onBack}
-        extra={<div style={{display:"flex",gap:8}}>{tabBtn("pos","New Order","🧺")}{tabBtn("orders","Orders","📋")}</div>}/>
+        extra={<div style={{display:"flex",gap:8}}>{tabBtn("pos","New Order","🧺")}{tabBtn("orders","Orders","📋",orders.filter(o=>o.stage!=="collected").length)}{tabBtn("pickups","Pickups","🚗",pendingPickups.length)}</div>}/>
 
       {tab==="pos"&&(
         <div>
@@ -2000,6 +2166,116 @@ function StaffView({role,onLogout,onBack=null,audioUnlocked=false,staffName=null
                   </div>
                 );
               })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {tab==="pickups"&&(
+        <div>
+          <div style={{...GP,marginBottom:20}}>
+            <div style={{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:15,color:"#fff"}}>Pickup Management</div>
+            <div style={{fontSize:12,color:"rgba(255,255,255,.4)",marginTop:4}}>View pickup locations on map and assign drivers</div>
+          </div>
+          {pendingPickups.length===0?(
+            <div style={{...GP,textAlign:"center",color:"rgba(255,255,255,.2)",padding:"50px 0"}}>
+              <div style={{fontSize:48,marginBottom:12}}>🚗</div>
+              No pending pickups to manage
+            </div>
+          ):(
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:20}}>
+              {/* Pickup List */}
+              <div style={GP}>
+                <div style={{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:14,color:"#fff",marginBottom:16}}>Pending Pickups ({pendingPickups.length})</div>
+                <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                  {pendingPickups.map(order => {
+                    const assignedStaff = order.assignedStaff ? staffList.find(s => s.id === order.assignedStaff) : null;
+                    const isSelected = selectedPickup?.id === order.id;
+                    return(
+                      <div key={order.id} onClick={()=>setSelectedPickup(order)} style={{padding:"14px",borderRadius:12,border:`1.5px solid ${isSelected?"#818cf8":"rgba(255,255,255,.1)"}`,background:isSelected?"rgba(99,102,241,.1)":"rgba(255,255,255,.03)",cursor:"pointer",transition:"all .2s"}}>
+                        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
+                          <div style={{background:"rgba(99,102,241,.2)",borderRadius:8,padding:"4px 8px",fontFamily:"monospace",fontWeight:700,fontSize:12,color:"#818cf8"}}>{order.invoiceNumber}</div>
+                          {assignedStaff&&<span style={{fontSize:10,background:"rgba(16,185,129,.15)",border:"1px solid rgba(16,185,129,.3)",color:"#10b981",borderRadius:20,padding:"2px 8px"}}>👤 {assignedStaff.name}</span>}
+                        </div>
+                        <div style={{fontWeight:600,fontSize:13,color:"#fff",marginBottom:4}}>{order.customer.name}</div>
+                        <div style={{fontSize:11,color:"rgba(255,255,255,.4)"}}>📅 {order.pickup?.date} at {order.pickup?.time}</div>
+                        <div style={{fontSize:11,color:"rgba(255,255,255,.4)"}}>📍 {order.pickup?.address || "Location pinned on map"}</div>
+                        {order.pickup?.location&&<div style={{fontSize:10,color:"#818cf8",marginTop:4}}>📌 {order.pickup.location.lat.toFixed(4)}, {order.pickup.location.lng.toFixed(4)}</div>}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              {/* Map & Assignment */}
+              <div style={GP}>
+                {selectedPickup ? (
+                  <div>
+                    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}>
+                      <div style={{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:14,color:"#fff"}}>Pickup Details</div>
+                      <button onClick={()=>setSelectedPickup(null)} style={{background:"rgba(255,255,255,.06)",border:"1px solid rgba(255,255,255,.1)",color:"rgba(255,255,255,.4)",borderRadius:8,width:28,height:28,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>✕</button>
+                    </div>
+                    {/* Map */}
+                    {selectedPickup.pickup?.location ? (
+                      <div style={{borderRadius:12,overflow:"hidden",height:200,marginBottom:16,border:"1.5px solid rgba(99,102,241,.3)"}}>
+                        <MapView lat={selectedPickup.pickup.location.lat} lng={selectedPickup.pickup.location.lng} height={200}/>
+                      </div>
+                    ) : (
+                      <div style={{height:200,background:"rgba(255,255,255,.05)",borderRadius:12,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:16,border:"1px dashed rgba(255,255,255,.1)"}}>
+                        <span style={{color:"rgba(255,255,255,.3)",fontSize:12}}>No location pinned by client</span>
+                      </div>
+                    )}
+                    {/* Info */}
+                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:16}}>
+                      <div style={{background:"rgba(255,255,255,.03)",borderRadius:10,padding:12}}>
+                        <div style={{fontSize:10,color:"rgba(255,255,255,.3)",textTransform:"uppercase",letterSpacing:1,marginBottom:4}}>Customer</div>
+                        <div style={{fontSize:13,fontWeight:600,color:"#fff"}}>{selectedPickup.customer.name}</div>
+                        <div style={{fontSize:11,color:"rgba(255,255,255,.5)"}}>{selectedPickup.customer.phone}</div>
+                      </div>
+                      <div style={{background:"rgba(255,255,255,.03)",borderRadius:10,padding:12}}>
+                        <div style={{fontSize:10,color:"rgba(255,255,255,.3)",textTransform:"uppercase",letterSpacing:1,marginBottom:4}}>Schedule</div>
+                        <div style={{fontSize:13,fontWeight:600,color:"#fff"}}>{selectedPickup.pickup?.date}</div>
+                        <div style={{fontSize:11,color:"rgba(255,255,255,.5)"}}>{selectedPickup.pickup?.time}</div>
+                      </div>
+                    </div>
+                    <div style={{background:"rgba(255,255,255,.03)",borderRadius:10,padding:12,marginBottom:16}}>
+                      <div style={{fontSize:10,color:"rgba(255,255,255,.3)",textTransform:"uppercase",letterSpacing:1,marginBottom:4}}>Address</div>
+                      <div style={{fontSize:13,color:"#fff"}}>{selectedPickup.pickup?.address || "No address provided"}</div>
+                      {selectedPickup.pickup?.addressNote&&<div style={{fontSize:11,color:"rgba(255,255,255,.4)",marginTop:4}}>{selectedPickup.pickup.addressNote}</div>}
+                    </div>
+                    <div style={{background:"rgba(255,255,255,.03)",borderRadius:10,padding:12,marginBottom:16}}>
+                      <div style={{fontSize:10,color:"rgba(255,255,255,.3)",textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>Services</div>
+                      <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+                        {selectedPickup.items.map((item,i)=>(
+                          <span key={i} style={{fontSize:11,padding:"3px 10px",borderRadius:20,background:"rgba(99,102,241,.1)",border:"1px solid rgba(99,102,241,.2)",color:"#818cf8"}}>{item.name} ×{item.qty}</span>
+                        ))}
+                      </div>
+                    </div>
+                    {/* Assign Staff */}
+                    <div>
+                      <div style={{fontSize:11,color:"rgba(255,255,255,.4)",textTransform:"uppercase",letterSpacing:1,marginBottom:10}}>Assign Driver</div>
+                      <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+                        {staffList.filter(s=>s.active!==false).length===0 ? (
+                          <div style={{fontSize:12,color:"rgba(255,255,255,.3)",padding:10}}>No active staff accounts. Create one in Staff Management.</div>
+                        ) : staffList.filter(s=>s.active!==false).map(staff=>{
+                          const isAssigned = selectedPickup.assignedStaff === staff.id;
+                          return(
+                            <button key={staff.id} onClick={()=>assignStaff(selectedPickup.id, staff.id)} style={{padding:"8px 14px",borderRadius:10,border:`1.5px solid ${isAssigned?"#10b981":"rgba(255,255,255,.1)"}`,background:isAssigned?"rgba(16,185,129,.15)":"rgba(255,255,255,.03)",color:isAssigned?"#10b981":"rgba(255,255,255,.6)",fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:12,cursor:"pointer",transition:"all .2s",display:"flex",alignItems:"center",gap:6}}>
+                              <span style={{fontSize:14}}>👤</span> {staff.name}
+                              {isAssigned&&<span style={{marginLeft:4}}>✓</span>}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"100%",minHeight:300,color:"rgba(255,255,255,.2)"}}>
+                    <div style={{fontSize:48,marginBottom:12}}>📍</div>
+                    <div style={{fontSize:14,marginBottom:4}}>Select a pickup</div>
+                    <div style={{fontSize:12}}>to view location & assign driver</div>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>

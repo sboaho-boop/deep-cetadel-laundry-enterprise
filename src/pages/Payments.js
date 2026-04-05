@@ -302,22 +302,93 @@ export default function Payments({ workerName = "Worker" }) {
               fontWeight: 700,
               fontSize: 13,
               color: "#f59e0b",
+              marginBottom: 12,
+              display: "flex",
+              alignItems: "center",
+              gap: 8
+            }}>
+              <span style={{ fontSize: 16 }}>📱</span> MTN Mobile Money Payment
+            </div>
+
+            {/* IMPORTANT - Invoice Reference */}
+            <div style={{
+              background: "rgba(239,68,68,.15)",
+              border: "2px solid #ef4444",
+              borderRadius: 12,
+              padding: "14px",
+              marginBottom: 14
+            }}>
+              <div style={{
+                fontSize: 12,
+                fontWeight: 700,
+                color: "#fca5a5",
+                textTransform: "uppercase",
+                letterSpacing: 1,
+                marginBottom: 8,
+                display: "flex",
+                alignItems: "center",
+                gap: 6
+              }}>
+                <span style={{ fontSize: 16 }}>⚠️</span> IMPORTANT — Use Invoice as Payment Reference
+              </div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(0,0,0,.4)", borderRadius: 8, padding: "12px 14px" }}>
+                <div>
+                  <div style={{ fontSize: 11, color: "rgba(255,255,255,.5)", marginBottom: 4 }}>Payment Reference:</div>
+                  <div style={{ fontSize: 18, color: "#fff", fontFamily: "monospace", fontWeight: 800, letterSpacing: 1 }}>{invoiceId || "(Enter Invoice ID Above)"}</div>
+                </div>
+                <button
+                  onClick={() => invoiceId && navigator.clipboard?.writeText(invoiceId)}
+                  style={{
+                    padding: "8px 16px",
+                    borderRadius: 8,
+                    border: "1px solid rgba(255,255,255,.2)",
+                    background: "rgba(255,255,255,.1)",
+                    color: "#fff",
+                    fontSize: 12,
+                    cursor: "pointer",
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontWeight: 600
+                  }}
+                >
+                  📋 Copy
+                </button>
+              </div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,.5)", marginTop: 10, lineHeight: 1.5 }}>
+                You <strong style={{ color: "#fca5a5" }}>MUST</strong> enter this invoice number as the payment note/reference when sending. Without it, we cannot verify your payment.
+              </div>
+            </div>
+
+            {/* How to Pay */}
+            <div style={{
+              background: "rgba(0,0,0,.2)",
+              border: "1px solid rgba(255,255,255,.07)",
+              borderRadius: 10,
+              padding: "12px 14px",
               marginBottom: 10
             }}>
-              📱 Mobile Money Payment Instructions
+              <div style={{
+                fontSize: 11,
+                fontWeight: 700,
+                color: "#00c6e0",
+                textTransform: "uppercase",
+                letterSpacing: 1,
+                marginBottom: 10
+              }}>
+                How to Pay
+              </div>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,.6)", lineHeight: 1.8 }}>
+                <div>1. Dial <strong style={{ color: "#fff" }}>*170#</strong></div>
+                <div>2. Select <strong style={{ color: "#fff" }}>Wallet & Payments</strong></div>
+                <div>3. Choose <strong style={{ color: "#fff" }}>Pay Merchant</strong> and enter:</div>
+              </div>
             </div>
 
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,.5)", marginBottom: 12 }}>
-              Send payment using <strong style={{ color: "rgba(255,255,255,.75)" }}>either</strong> option below, then click <em>Add Payment</em> to notify us.
-            </div>
-
-            {/* Option 1 */}
+            {/* Payment Options */}
             <div style={{
               background: "rgba(0,0,0,.2)",
               border: "1px solid rgba(255,255,255,.07)",
               borderRadius: 10,
-              padding: "10px 14px",
-              marginBottom: 8
+              padding: "12px 14px"
             }}>
               <div style={{
                 fontSize: 11,
@@ -325,64 +396,55 @@ export default function Payments({ workerName = "Worker" }) {
                 color: "#00c6e0",
                 textTransform: "uppercase",
                 letterSpacing: 1,
-                marginBottom: 6
+                marginBottom: 10
               }}>
-                Option 1 — Personal Number
+                Payment Details
               </div>
-              <div style={{ fontSize: 13, color: "#e8f4f8" }}>
-                📞 <strong>0553560016</strong>
-              </div>
-              <div style={{ fontSize: 12, color: "rgba(255,255,255,.45)", marginTop: 3 }}>
-                👤 Samuel Gameli
-              </div>
-            </div>
-
-            {/* Option 2 */}
-            <div style={{
-              background: "rgba(0,0,0,.2)",
-              border: "1px solid rgba(255,255,255,.07)",
-              borderRadius: 10,
-              padding: "10px 14px",
-              marginBottom: 12
-            }}>
-              <div style={{
-                fontSize: 11,
-                fontWeight: 700,
-                color: "#00c6e0",
-                textTransform: "uppercase",
-                letterSpacing: 1,
-                marginBottom: 6
-              }}>
-                Option 2 — Merchant ID
-              </div>
-              <div style={{ fontSize: 13, color: "#e8f4f8" }}>
-                🏪 Merchant ID: <strong>254345</strong>
-              </div>
-              <div style={{ fontSize: 12, color: "rgba(255,255,255,.45)", marginTop: 3 }}>
-                🏷️ Deep Citadel Laundry
-              </div>
-            </div>
-
-            {/* Reference warning */}
-            <div style={{
-              display: "flex",
-              alignItems: "flex-start",
-              gap: 8,
-              background: "rgba(245,158,11,.12)",
-              border: "1px solid rgba(245,158,11,.3)",
-              borderRadius: 8,
-              padding: "9px 12px"
-            }}>
-              <span style={{ fontSize: 14, flexShrink: 0 }}>⚠️</span>
-              <div style={{ fontSize: 12, color: "rgba(255,215,100,.85)", lineHeight: 1.6 }}>
-                Use your Invoice Number{" "}
-                <strong style={{ color: "#f59e0b" }}>
-                  {invoiceId ? `(${invoiceId})` : "(e.g. INV-1001)"}
-                </strong>{" "}
-                as the payment <strong style={{ color: "#f59e0b" }}>reference / note</strong> when sending.
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div style={{
+                    width: 24,
+                    height: 24,
+                    borderRadius: "50%",
+                    background: "rgba(99,102,241,.2)",
+                    border: "1px solid #6366f1",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 10,
+                    color: "#818cf8",
+                    fontWeight: 700,
+                    flexShrink: 0
+                  }}>A</div>
+                  <div>
+                    <div style={{ fontSize: 11, color: "rgba(255,255,255,.4)", marginBottom: 2 }}>Option A — Merchant ID</div>
+                    <div style={{ fontSize: 14, color: "#fff", fontFamily: "monospace", fontWeight: 700 }}>254345</div>
+                    <div style={{ fontSize: 11, color: "rgba(255,255,255,.4)" }}>Deep Citadel Laundry</div>
+                  </div>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div style={{
+                    width: 24,
+                    height: 24,
+                    borderRadius: "50%",
+                    background: "rgba(99,102,241,.2)",
+                    border: "1px solid #6366f1",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 10,
+                    color: "#818cf8",
+                    fontWeight: 700,
+                    flexShrink: 0
+                  }}>B</div>
+                  <div>
+                    <div style={{ fontSize: 11, color: "rgba(255,255,255,.4)", marginBottom: 2 }}>Option B — Personal Number</div>
+                    <div style={{ fontSize: 14, color: "#fff", fontFamily: "monospace", fontWeight: 700 }}>0553560016</div>
+                    <div style={{ fontSize: 11, color: "rgba(255,255,255,.4)" }}>Samuel Gameli</div>
+                  </div>
+                </div>
               </div>
             </div>
-
           </div>
         )}
 
