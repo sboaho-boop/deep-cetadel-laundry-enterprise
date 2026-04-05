@@ -1,12 +1,8 @@
 import { useState, useEffect } from "react";
 import { 
-  FaPrint, FaWhatsapp, FaTrash, FaCheck, 
+  FaTrash, FaCheck, 
   FaFileInvoice, FaHistory, FaUser, FaPhoneAlt, FaMapMarkerAlt, FaTruck 
 } from "react-icons/fa";
-
-// ── Constants & Theme ────────────────────────────────────────────────────────
-const COMPANY = "Deep Citadel Laundry Services";
-const COMPANY_PHONE = "0244639002";
 const fmt = n => `₵${Number(n).toFixed(2)}`;
 const uid = () => "INV-" + Date.now().toString().slice(-6);
 

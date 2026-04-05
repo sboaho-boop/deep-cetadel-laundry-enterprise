@@ -1,8 +1,8 @@
 import { useState, useMemo, useEffect } from "react";
 import {
-  FaTshirt, FaClock, FaStar, FaUserAlt, FaPlus, FaEdit, FaTrash,
+  FaTshirt, FaStar, FaUserAlt, FaPlus, FaEdit, FaTrash,
   FaBars, FaTimes, FaSearch, FaBell, FaMoon, FaSun, FaChevronUp,
-  FaChevronDown, FaChevronLeft, FaChevronRight, FaExpand, FaDownload,
+  FaChevronDown, FaChevronLeft, FaChevronRight, FaExpand,
   FaCheckCircle, FaSpinner, FaBoxOpen, FaHourglass
 } from "react-icons/fa";
 // No recharts needed — using inline SVG charts below

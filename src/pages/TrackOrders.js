@@ -1,16 +1,9 @@
 import { useState, useEffect } from "react";
 import { 
-  FaWhatsapp, 
-  FaQrcode, 
   FaPlus, 
   FaSearch, 
-  FaTimes, 
   FaHistory, 
   FaTruck, 
-  FaUser, 
-  FaPhoneAlt, 
-  FaFileInvoice, 
-  FaPrint, 
   FaTrash,
   FaCheckCircle
 } from "react-icons/fa";

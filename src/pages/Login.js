@@ -1003,8 +1003,6 @@ function StaffManagement() {
   const [showPwd, setShowPwd] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(null);
 
-  const refresh = () => setStaffList(loadStaff());
-
   const openAdd = () => {
     setForm({ name:"", email:"", password:"", role:"staff" });
     setFormErr({}); setEditTarget(null); setShowModal(true); setShowPwd(false);

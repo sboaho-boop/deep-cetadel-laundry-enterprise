@@ -1,13 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import {
-  FaWhatsapp, FaEnvelope, FaPhone, FaMapMarkerAlt, FaTicketAlt,
-  FaChevronDown, FaChevronUp, FaPaperclip, FaTimes, FaCheckCircle,
+  FaWhatsapp, FaEnvelope, FaPhone, FaTicketAlt,
+  FaChevronDown, FaPaperclip, FaTimes, FaCheckCircle,
   FaRobot, FaPaperPlane, FaSearch, FaClock, FaExclamationCircle,
 } from "react-icons/fa";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const WA_NUMBER  = "+233244639002";
-const COMPANY    = "Deep Citadel Laundry";
 const MAX_CHARS  = 500;
 const TICKET_KEY = "dcl_support_tickets";
 
@@ -307,7 +306,6 @@ export default function Support() {
   };
 
   const charLeft = MAX_CHARS - message.length;
-  const catMeta  = CATEGORIES.find(c => c.key === category);
 
   return (
     <>
