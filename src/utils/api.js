@@ -1,19 +1,22 @@
-const API_BASE = "https://JoeKelly.pythonanywhere.com/api";
+const API_BASE = process.env.REACT_APP_API_URL || "https://JoeKelly.pythonanywhere.com/api";
 
 // Helper for fetch calls
 async function apiFetch(endpoint, options = {}) {
   const url = `${API_BASE}${endpoint}`;
   const defaultOptions = {
     credentials: "include", // Include cookies
+    headers: { "Content-Type": "application/json", ...options.headers },
   };
   const mergedOptions = { ...defaultOptions, ...options };
   
   try {
     const response = await fetch(url, mergedOptions);
-    const data = await response.json();
+    const text = await response.text();
+    let data;
+    try { data = JSON.parse(text); } catch { data = { error: text }; }
     
     if (!response.ok) {
-      throw new Error(data.error || `HTTP ${response.status}`);
+      throw new Error(data.error || data.detail || `HTTP ${response.status}`);
     }
     
     return data;
@@ -148,6 +151,6 @@ export const userAPI = {
     }),
 };
 
-// ── Fallback to localStorage when API unavailable ────────────────────────
-// You can set this to false in development or if API is down
-export const USE_API = true;
+// ── Toggle for API vs localStorage ────────────────────────
+// Set to true when API is ready and tested
+export const USE_API = false;

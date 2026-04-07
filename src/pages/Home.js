@@ -682,11 +682,29 @@ function SchedulePickupModal({ customer, onClose, onSubmit }) {
     return e;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const errs = validate();
     if (Object.keys(errs).length) { setErrors(errs); return; }
     setLoading(true);
-    setTimeout(() => {
+    
+    const orderData = {
+      name: form.name.trim(),
+      phone: form.phone.trim(),
+      services: selectedServicesList.map(s => ({ name: s.name, qty: s.qty })),
+      pickup_date: form.date,
+      pickup_time: form.time,
+      address: form.address.trim() || "Location pinned on map",
+      address_note: form.addressNote.trim(),
+      location: location,
+    };
+    
+    try {
+      const result = await userAPI.placeOrder(orderData);
+      setLoading(false);
+      onSubmit(result.invoice_id || result.invoiceNumber);
+    } catch (err) {
+      console.log("API placeOrder failed, using localStorage:", err.message);
+      // Fallback to localStorage
       const existing = loadOrders();
       const num = `INV-${String(existing.length+1).padStart(3,"0")}`;
       const pickupOrder = {
@@ -713,7 +731,7 @@ function SchedulePickupModal({ customer, onClose, onSubmit }) {
       saveOrders(updated);
       setLoading(false);
       onSubmit(num);
-    }, 1200);
+    }
   };
 
   const f = (field, val) => { setForm(p=>({...p,[field]:val})); setErrors(p=>({...p,[field]:""})); };
@@ -903,12 +921,26 @@ function PickupPaymentModal({ onClose }) {
     }, 900);
   };
 
-  const submitPayment = () => {
+  const submitPayment = async () => {
     if (!method) return;
     const amt = parseFloat(amountPaid);
     if (order.total > 0 && (isNaN(amt) || amt < order.total)) return;
     setLoading(true);
-    setTimeout(() => {
+    
+    const paymentData = {
+      method: method,
+      amount: order.total > 0 ? amt : 0,
+      transaction_id: method === "momo" ? order.invoiceNumber : null,
+    };
+    
+    try {
+      await userAPI.submitPayment(order.invoiceNumber, paymentData);
+      setLoading(false);
+      setCountdown(CONFIRM_DELAY_MS / 1000);
+      setStep("awaiting");
+    } catch (err) {
+      console.log("API submitPayment failed, using localStorage:", err.message);
+      // Fallback
       const payment = {
         method,
         amountPaid: order.total > 0 ? amt : 0,
@@ -918,14 +950,14 @@ function PickupPaymentModal({ onClose }) {
       };
       const updated = loadOrders().map(o =>
         o.id === order.id
-          ? { ...o, paymentStatus:"awaiting_confirmation", paymentSubmittedAt: new Date().toISOString(), paymentPending: payment }
+          ? { ...o, paymentStatus: "awaiting_confirmation", paymentSubmittedAt: new Date().toISOString(), paymentPending: payment }
           : o
       );
       saveOrders(updated);
       setLoading(false);
       setCountdown(CONFIRM_DELAY_MS / 1000);
       setStep("awaiting");
-    }, 900);
+    }
   };
 
   const fmt = (s) => {
@@ -1234,25 +1266,41 @@ function LoginView({onLogin}){
     return e;
   };
 
-  const handleLogin=e=>{
+  const handleLogin = async (e) => {
     e?.preventDefault();
-    const errs=validate();
-    if(Object.keys(errs).length){setErrors(errs);setShake(true);setTimeout(()=>setShake(false),500);return;}
-    setErrors({});setLoading(true);
-    setTimeout(()=>{
-      if(role==="client"){
-        const found=loadOrders().find(o=>o.invoiceNumber?.toUpperCase()===inv.trim().toUpperCase());
-        if(found) onLogin({role:"client",invoice:inv.trim().toUpperCase()});
-        else{setLoading(false);setErrors({general:"Invoice not found."});setShake(true);setTimeout(()=>setShake(false),500);}
-      } else if(role==="owner"){
-        if(email===DEMO_OWNER.email&&pwd===DEMO_OWNER.password) onLogin({role:"owner"});
-        else{setLoading(false);setErrors({general:"Invalid credentials."});setShake(true);setTimeout(()=>setShake(false),500);}
-      } else if(role==="staff"){
-        const found=loadStaff().find(s=>s.email.toLowerCase()===email.toLowerCase()&&s.password===pwd&&s.active!==false);
-        if(found) onLogin({role:"staff",staffName:found.name});
-        else{setLoading(false);setErrors({general:"Invalid credentials."});setShake(true);setTimeout(()=>setShake(false),500);}
+    const errs = validate();
+    if (Object.keys(errs).length) { setErrors(errs); setShake(true); setTimeout(() => setShake(false), 500); return; }
+    setErrors({}); setLoading(true);
+    
+    try {
+      if (role === "client") {
+        const order = await userAPI.trackOrder(inv.trim().toUpperCase());
+        setLoading(false);
+        onLogin({ role: "client", invoice: inv.trim().toUpperCase() });
+      } else if (role === "owner" || role === "staff") {
+        const session = await adminAPI.login(email, pwd);
+        setLoading(false);
+        const name = session.name || session.username || (role === "owner" ? "Owner" : "Staff");
+        onLogin({ role: role, staffName: name });
       }
-    },1200);
+    } catch (err) {
+      console.log("API login failed:", err.message);
+      // Fallback to localStorage
+      setTimeout(() => {
+        if (role === "client") {
+          const found = loadOrders().find(o => o.invoiceNumber?.toUpperCase() === inv.trim().toUpperCase());
+          if (found) onLogin({ role: "client", invoice: inv.trim().toUpperCase() });
+          else { setLoading(false); setErrors({ general: "Invoice not found." }); setShake(true); setTimeout(() => setShake(false), 500); }
+        } else if (role === "owner") {
+          if (email === DEMO_OWNER.email && pwd === DEMO_OWNER.password) onLogin({ role: "owner" });
+          else { setLoading(false); setErrors({ general: "Invalid credentials." }); setShake(true); setTimeout(() => setShake(false), 500); }
+        } else if (role === "staff") {
+          const found = loadStaff().find(s => s.email.toLowerCase() === email.toLowerCase() && s.password === pwd && s.active !== false);
+          if (found) onLogin({ role: "staff", staffName: found.name });
+          else { setLoading(false); setErrors({ general: "Invalid credentials." }); setShake(true); setTimeout(() => setShake(false), 500); }
+        }
+      }, 300);
+    }
   };
 
   // ── Landing page data ────────────────────────────────────────────────────
@@ -1932,25 +1980,73 @@ function StaffView({role,onLogout,onBack=null,audioUnlocked=false,staffName=null
   const removeFromCart=(id)=>{const item=cart.find(i=>i.id===id);if(item)setQty(item.name,0);setCart(prev=>prev.filter(i=>i.id!==id));};
   const clearAll=()=>{setCart([]);setQuantities(Object.fromEntries(services.map(k=>[k,0])));};
 
-  const processOrder=()=>{
-    if(!customer.name.trim()||cart.length===0)return;
-    const existing=loadOrders();
-    const num=`INV-${String(existing.length+1).padStart(3,"0")}`;
-    const newOrder={id:`ord-${Date.now()}`,invoiceNumber:num,customer:{name:customer.name.trim(),phone:customer.phone.trim()},items:cart.map(i=>({name:i.name,qty:i.qty,unitPrice:i.unitPrice,subtotal:i.subtotal})),total:totalAmount,stage:"received",createdAt:new Date().toISOString(),createdBy:staffName||role};
-    const updated=[...existing,newOrder];
-    saveOrders(updated);setOrders(updated);setSuccessInv(num);clearAll();setCustomer({name:"",phone:""});
-    if(audioUnlocked)Sounds.newBooking();
-    pushToast({icon:"🧺",title:"New Order Created",message:num+" — "+customer.name.trim()+" · ₵"+totalAmount.toFixed(2),accent:"#00c6e0",border:"rgba(0,198,224,.35)",duration:5000});
-    setTimeout(()=>setSuccessInv(null),6000);
+  const processOrder = async () => {
+    if (!customer.name.trim() || cart.length === 0) return;
+    
+    const orderData = {
+      name: customer.name.trim(),
+      phone: customer.phone.trim(),
+      items: cart.map(i => ({ name: i.name, qty: i.qty })),
+      total: totalAmount,
+    };
+    
+    try {
+      const result = await userAPI.createStaffOrder(orderData);
+      refreshOrders();
+      clearAll();
+      setCustomer({ name: "", phone: "" });
+      setSuccessInv(result.invoice_id || result.invoiceNumber);
+      if (audioUnlocked) Sounds.newBooking();
+      pushToast({ icon: "🧺", title: "New Order Created", message: (result.invoice_id || result.invoiceNumber) + " — " + customer.name.trim() + " · ₵" + totalAmount.toFixed(2), accent: "#00c6e0", border: "rgba(0,198,224,.35)", duration: 5000 });
+      setTimeout(() => setSuccessInv(null), 6000);
+    } catch (err) {
+      console.log("API processOrder failed, using localStorage:", err.message);
+      // Fallback
+      const existing = loadOrders();
+      const num = `INV-${String(existing.length + 1).padStart(3, "0")}`;
+      const newOrder = { id: `ord-${Date.now()}`, invoiceNumber: num, customer: { name: customer.name.trim(), phone: customer.phone.trim() }, items: cart.map(i => ({ name: i.name, qty: i.qty, unitPrice: i.unitPrice, subtotal: i.subtotal })), total: totalAmount, stage: "RECEIVED", createdAt: new Date().toISOString(), createdBy: staffName || role };
+      const updated = [...existing, newOrder];
+      saveOrders(updated); setOrders(updated); setSuccessInv(num); clearAll(); setCustomer({ name: "", phone: "" });
+      if (audioUnlocked) Sounds.newBooking();
+      pushToast({ icon: "🧺", title: "New Order Created", message: num + " — " + customer.name.trim() + " · ₵" + totalAmount.toFixed(2), accent: "#00c6e0", border: "rgba(0,198,224,.35)", duration: 5000 });
+      setTimeout(() => setSuccessInv(null), 6000);
+    }
   };
 
-  const updateStage=(orderId,stage)=>{const updated=loadOrders().map(o=>o.id===orderId?{...o,stage}:o);saveOrders(updated);setOrders(updated);};
-  const recordPayment=(orderId,payment)=>{
-    const updated=loadOrders().map(o=>o.id===orderId?{...o,payment}:o);saveOrders(updated);setOrders(updated);
-    const paidOrder=updated.find(o=>o.id===orderId);
-    if(audioUnlocked)Sounds.paymentDone();
-    pushToast({icon:"💰",title:"Payment Recorded",message:(paidOrder?.invoiceNumber||"Order")+" — ₵"+payment.amountPaid.toFixed(2)+" via "+(PAYMENT_METHODS.find(p=>p.key===payment.method)?.label||payment.method),accent:"#10b981",border:"rgba(16,185,129,.4)",duration:4000});
-    setPaymentTarget(null);
+  const updateStage = async (orderId, stage) => {
+    const order = orders.find(o => o.id === orderId);
+    if (!order) return;
+    
+    try {
+      await userAPI.updateStaffOrder(order.invoiceNumber, { status: stage });
+      refreshOrders();
+    } catch (err) {
+      console.log("API updateStage failed, using localStorage:", err.message);
+      const updated = loadOrders().map(o => o.id === orderId ? { ...o, stage } : o);
+      saveOrders(updated); setOrders(updated);
+    }
+  };
+  
+  const recordPayment = async (orderId, payment) => {
+    const order = orders.find(o => o.id === orderId);
+    if (!order) return;
+    
+    try {
+      await userAPI.recordStaffPayment(order.invoiceNumber, payment);
+      refreshOrders();
+      const paidOrder = orders.find(o => o.id === orderId);
+      if (audioUnlocked) Sounds.paymentDone();
+      pushToast({ icon: "💰", title: "Payment Recorded", message: (paidOrder?.invoiceNumber || "Order") + " — ₵" + payment.amountPaid.toFixed(2) + " via " + (PAYMENT_METHODS.find(p => p.key === payment.method)?.label || payment.method), accent: "#10b981", border: "rgba(16,185,129,.4)", duration: 4000 });
+      setPaymentTarget(null);
+    } catch (err) {
+      console.log("API recordPayment failed, using localStorage:", err.message);
+      const updated = loadOrders().map(o => o.id === orderId ? { ...o, payment } : o);
+      saveOrders(updated); setOrders(updated);
+      const paidOrder = updated.find(o => o.id === orderId);
+      if (audioUnlocked) Sounds.paymentDone();
+      pushToast({ icon: "💰", title: "Payment Recorded", message: (paidOrder?.invoiceNumber || "Order") + " — ₵" + payment.amountPaid.toFixed(2) + " via " + (PAYMENT_METHODS.find(p => p.key === payment.method)?.label || payment.method), accent: "#10b981", border: "rgba(16,185,129,.4)", duration: 4000 });
+      setPaymentTarget(null);
+    }
   };
 
   const tabBtn=(id,label,icon,badge=null)=>(
@@ -1962,12 +2058,23 @@ function StaffView({role,onLogout,onBack=null,audioUnlocked=false,staffName=null
 
   const pendingPickups = orders.filter(o => isPickupOrder(o) && o.stage !== "pickup_delivered" && o.stage !== "pickup_collected");
 
-  const assignStaff = (orderId, staffId) => {
-    const updated = loadOrders().map(o => o.id === orderId ? { ...o, assignedStaff: staffId } : o);
-    saveOrders(updated);
-    setOrders(updated);
-    setSelectedPickup(prev => prev ? { ...prev, assignedStaff: staffId } : null);
-    pushToast({ icon:"👤", title:"Staff Assigned", message:`${staffList.find(s => s.id === staffId)?.name || "Unknown"} assigned to pickup.`, accent:"#818cf8", border:"rgba(129,140,248,.4)", duration:3000 });
+  const assignStaff = async (orderId, staffId) => {
+    const order = orders.find(o => o.id === orderId);
+    if (!order) return;
+    
+    try {
+      await userAPI.updateStaffOrder(order.invoiceNumber, { assigned_staff: staffId });
+      refreshOrders();
+      setSelectedPickup(prev => prev ? { ...prev, assignedStaff: staffId } : null);
+      pushToast({ icon: "👤", title: "Staff Assigned", message: `${staffList.find(s => s.id === staffId)?.name || "Unknown"} assigned to pickup.`, accent: "#818cf8", border: "rgba(129,140,248,.4)", duration: 3000 });
+    } catch (err) {
+      console.log("API assignStaff failed, using localStorage:", err.message);
+      const updated = loadOrders().map(o => o.id === orderId ? { ...o, assignedStaff: staffId } : o);
+      saveOrders(updated);
+      setOrders(updated);
+      setSelectedPickup(prev => prev ? { ...prev, assignedStaff: staffId } : null);
+      pushToast({ icon: "👤", title: "Staff Assigned", message: `${staffList.find(s => s.id === staffId)?.name || "Unknown"} assigned to pickup.`, accent: "#818cf8", border: "rgba(129,140,248,.4)", duration: 3000 });
+    }
   };
 
   return(
@@ -2294,40 +2401,65 @@ function StaffManagement() {
     if (!form.name.trim()) e.name = "Name is required.";
     if (!form.email.trim()) e.email = "Email is required.";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = "Invalid email format.";
-    else {
-      const dup = staffList.find(s => s.email.toLowerCase() === form.email.toLowerCase() && s.id !== editTarget);
-      if (dup) e.email = "This email is already in use.";
-    }
-    if (!editTarget && !form.password.trim()) e.password = "Password is required.";
-    else if (form.password && form.password.length < 6) e.password = "At least 6 characters.";
     return e;
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const errs = validate();
     if (Object.keys(errs).length) { setFormErr(errs); return; }
-    const current = loadStaff();
-    let updated;
-    if (editTarget) {
-      updated = current.map(s => s.id === editTarget
-        ? { ...s, name:form.name.trim(), email:form.email.trim(), ...(form.password?{password:form.password}:{}), role:form.role }
-        : s
-      );
-      pushToast({ icon:"✏️", title:"Staff Updated", message:`${form.name.trim()}'s account has been updated.`, accent:"#818cf8", border:"rgba(129,140,248,.4)", duration:3500 });
-    } else {
-      const newMember = { id:`staff-${Date.now()}`, name:form.name.trim(), email:form.email.trim(), password:form.password, role:form.role, active:true, createdAt:new Date().toISOString() };
-      updated = [...current, newMember];
-      pushToast({ icon:"👤", title:"Staff Created", message:`${form.name.trim()} can now log in with their credentials.`, accent:"#10b981", border:"rgba(16,185,129,.4)", duration:4000 });
+    
+    const staffData = {
+      name: form.name.trim(),
+      username: form.email.trim().split('@')[0],
+      email: form.email.trim(),
+      password: form.password,
+      role: form.role,
+    };
+    
+    try {
+      if (editTarget) {
+        await adminAPI.updateStaff(editTarget, staffData);
+      } else {
+        await adminAPI.createStaff(staffData);
+      }
+      // Refresh staff list from API
+      const staff = await adminAPI.getStaff();
+      setStaffList(staff);
+      pushToast({ icon: editTarget ? "✏️" : "👤", title: editTarget ? "Staff Updated" : "Staff Created", message: `${form.name.trim()}'s account has been ${editTarget ? "updated" : "created"}.`, accent: "#818cf8", border: "rgba(129,140,248,.4)", duration: 3500 });
+      setShowModal(false);
+    } catch (err) {
+      console.log("API handleSave failed, using localStorage:", err.message);
+      // Fallback
+      const current = loadStaff();
+      let updated;
+      if (editTarget) {
+        updated = current.map(s => s.id === editTarget
+          ? { ...s, name: form.name.trim(), email: form.email.trim(), ...(form.password ? { password: form.password } : {}), role: form.role }
+          : s
+        );
+        pushToast({ icon: "✏️", title: "Staff Updated", message: `${form.name.trim()}'s account has been updated.`, accent: "#818cf8", border: "rgba(129,140,248,.4)", duration: 3500 });
+      } else {
+        const newMember = { id: `staff-${Date.now()}`, name: form.name.trim(), email: form.email.trim(), password: form.password, role: form.role, active: true, createdAt: new Date().toISOString() };
+        updated = [...current, newMember];
+        pushToast({ icon: "👤", title: "Staff Created", message: `${form.name.trim()} can now log in with their credentials.`, accent: "#10b981", border: "rgba(16,185,129,.4)", duration: 4000 });
+      }
+      saveStaff(updated); setStaffList(updated); setShowModal(false);
     }
-    saveStaff(updated); setStaffList(updated); setShowModal(false);
   };
 
-  const toggleActive = (id) => {
-    const updated = loadStaff().map(s => s.id === id ? { ...s, active: !s.active } : s);
-    saveStaff(updated); setStaffList(updated);
+  const toggleActive = async (id) => {
+    try {
+      await adminAPI.deleteStaff(id);
+      const staff = await adminAPI.getStaff();
+      setStaffList(staff);
+    } catch (err) {
+      console.log("API toggleActive failed, using localStorage:", err.message);
+      const updated = loadStaff().map(s => s.id === id ? { ...s, active: !s.active } : s);
+      saveStaff(updated); setStaffList(updated);
+    }
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     const updated = loadStaff().filter(s => s.id !== id);
     saveStaff(updated); setStaffList(updated); setConfirmDelete(null);
     pushToast({ icon:"🗑️", title:"Staff Removed", message:"Account deleted successfully.", accent:"#ef4444", border:"rgba(239,68,68,.4)", duration:3000 });
