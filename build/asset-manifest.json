@@ -1,10 +1,10 @@
 {
   "files": {
-    "main.css": "/deep-cetadel-laundry-enterprise/static/css/main.2e662a65.css",
-    "main.js": "/deep-cetadel-laundry-enterprise/static/js/main.2a6de925.js",
-    "index.html": "/deep-cetadel-laundry-enterprise/index.html",
-    "main.2e662a65.css.map": "/deep-cetadel-laundry-enterprise/static/css/main.2e662a65.css.map",
-    "main.2a6de925.js.map": "/deep-cetadel-laundry-enterprise/static/js/main.2a6de925.js.map"
+    "main.css": "./static/css/main.2e662a65.css",
+    "main.js": "./static/js/main.2a6de925.js",
+    "index.html": "./index.html",
+    "main.2e662a65.css.map": "./static/css/main.2e662a65.css.map",
+    "main.2a6de925.js.map": "./static/js/main.2a6de925.js.map"
   },
   "entrypoints": [
     "static/css/main.2e662a65.css",
