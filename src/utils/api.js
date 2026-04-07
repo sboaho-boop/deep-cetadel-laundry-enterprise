@@ -153,4 +153,4 @@ export const userAPI = {
 
 // ── Toggle for API vs localStorage ────────────────────────
 // Set to true when API is ready and tested
-export const USE_API = false;
+export const USE_API = true;
