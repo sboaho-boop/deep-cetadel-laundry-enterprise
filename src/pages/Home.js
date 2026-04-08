@@ -50,8 +50,6 @@ const ROLES = [
   { key:"owner",  label:"Owner",  color:"#f59e0b", desc:"Full access & analytics" },
 ];
 
-const DEMO_OWNER = { email:"owner@deepcitadel.com", password:"owner123" };
-
 const DEFAULT_META = {
   "Wash & Fold":  { icon:"Wash",  accent:"#00c6e0" },
   "Dry Cleaning": { icon:"Steam", accent:"#10b981" },
@@ -1291,13 +1289,9 @@ function LoginView({onLogin}){
           const found = loadOrders().find(o => o.invoiceNumber?.toUpperCase() === inv.trim().toUpperCase());
           if (found) onLogin({ role: "client", invoice: inv.trim().toUpperCase() });
           else { setLoading(false); setErrors({ general: "Invoice not found." }); setShake(true); setTimeout(() => setShake(false), 500); }
-        } else if (role === "owner") {
-          if (email === DEMO_OWNER.email && pwd === DEMO_OWNER.password) onLogin({ role: "owner" });
-          else { setLoading(false); setErrors({ general: "Invalid credentials." }); setShake(true); setTimeout(() => setShake(false), 500); }
-        } else if (role === "staff") {
-          const found = loadStaff().find(s => s.email.toLowerCase() === email.toLowerCase() && s.password === pwd && s.active !== false);
-          if (found) onLogin({ role: "staff", staffName: found.name });
-          else { setLoading(false); setErrors({ general: "Invalid credentials." }); setShake(true); setTimeout(() => setShake(false), 500); }
+        } else if (role === "owner" || role === "staff") {
+          // Fallback removed - use API only
+          setLoading(false); setErrors({ general: "API connection failed. Please check backend." }); setShake(true); setTimeout(() => setShake(false), 500);
         }
       }, 300);
     }

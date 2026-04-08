@@ -26,6 +26,21 @@ async function apiFetch(endpoint, options = {}) {
   }
 }
 
+// ── Setup API ────────────────────────────────────────────────────────
+export const setupAPI = {
+  // Check if admin exists
+  checkAdmin: () =>
+    apiFetch("/admin/check/", { method: "POST" }),
+  
+  // Create first admin user
+  createAdmin: (data) =>
+    apiFetch("/admin/setup/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    }),
+};
+
 // ── Admin API ────────────────────────────────────────────────────────
 export const adminAPI = {
   login: (username, password) =>

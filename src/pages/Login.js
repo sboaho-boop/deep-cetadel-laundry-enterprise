@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { adminAPI, userAPI } from "../utils/api";
+import { adminAPI, userAPI, setupAPI } from "../utils/api";
+import AdminSetup from "./AdminSetup";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const PRICE_KEY  = "dcl_prices";
@@ -36,8 +37,6 @@ const ROLES = [
   { key:"staff",  label:"Staff",  color:"#10b981", desc:"Manage laundry operations" },
   { key:"owner",  label:"Owner",  color:"#f59e0b", desc:"Full access & analytics" },
 ];
-
-const DEMO_OWNER = { email:"owner@deepcitadel.com", password:"owner123" };
 
 const DEFAULT_META = {
   "Wash & Fold":  { icon:"Wash",  accent:"#00c6e0" },
@@ -582,8 +581,22 @@ function ForgotPassword({onBack}){
 // LOGIN VIEW
 // ══════════════════════════════════════════════════════════════════════════════
 function LoginView({onLogin}){
-  const [role,setRole]=useState("client"),[email,setEmail]=useState(""),[pwd,setPwd]=useState(""),[inv,setInv]=useState(""),[show,setShow]=useState(false),[remember,setRemember]=useState(false),[loading,setLoading]=useState(false),[errors,setErrors]=useState({}),[shake,setShake]=useState(false),[forgot,setForgot]=useState(false),[loaded,setLoaded]=useState(false);
+  const [role,setRole]=useState("client"),[email,setEmail]=useState(""),[pwd,setPwd]=useState(""),[inv,setInv]=useState(""),[show,setShow]=useState(false),[remember,setRemember]=useState(false),[loading,setLoading]=useState(false),[errors,setErrors]=useState({}),[shake,setShake]=useState(false),[forgot,setForgot]=useState(false),[loaded,setLoaded]=useState(false),[needsSetup,setNeedsSetup]=useState(null);
   useEffect(()=>{setTimeout(()=>setLoaded(true),100);},[]);
+  
+  // Check if admin exists on mount
+  useEffect(()=>{
+    const checkAdmin = async () => {
+      try {
+        const result = await setupAPI.checkAdmin();
+        setNeedsSetup(!result.has_admin);
+      } catch (err) {
+        setNeedsSetup(true); // If API fails, show setup
+      }
+    };
+    checkAdmin();
+  },[]);
+
   const ar=ROLES.find(r=>r.key===role);
 
   const validate=()=>{
@@ -593,44 +606,40 @@ function LoginView({onLogin}){
     return e;
   };
 
-  const handleLogin=e=>{
+  const handleLogin = async (e) => {
     e?.preventDefault();
-    const errs=validate();
-    if(Object.keys(errs).length){setErrors(errs);setShake(true);setTimeout(()=>setShake(false),500);return;}
-    setErrors({});setLoading(true);
-    setTimeout(()=>{
-      if(role==="client"){
-        const orders=loadOrders();
-        const found=orders.find(o=>o.invoiceNumber?.toUpperCase()===inv.trim().toUpperCase());
-        if(found){onLogin({role:"client",invoice:inv.trim().toUpperCase()});}
-        else{setLoading(false);setErrors({general:"Invoice not found. Try a demo number."});setShake(true);setTimeout(()=>setShake(false),500);}
-      } else if(role==="owner"){
-        if(email===DEMO_OWNER.email&&pwd===DEMO_OWNER.password){onLogin({role:"owner"});}
-        else{setLoading(false);setErrors({general:"Invalid credentials."});setShake(true);setTimeout(()=>setShake(false),500);}
-      } else if(role==="staff"){
-        // Check owner-created staff from localStorage
-        const staffList=loadStaff();
-        const found=staffList.find(s=>s.email.toLowerCase()===email.toLowerCase()&&s.password===pwd&&s.active!==false);
-        if(found){onLogin({role:"staff",staffName:found.name});}
-        else{setLoading(false);setErrors({general:"Invalid credentials. Ask your owner for your login details."});setShake(true);setTimeout(()=>setShake(false),500);}
+    const errs = validate();
+    if (Object.keys(errs).length) { setErrors(errs); setShake(true); setTimeout(() => setShake(false), 500); return; }
+    setErrors({}); setLoading(true);
+
+    try {
+      if (role === "client") {
+        const order = await userAPI.trackOrder(inv.trim().toUpperCase());
+        setLoading(false);
+        onLogin({ role: "client", invoice: inv.trim().toUpperCase() });
+      } else if (role === "owner" || role === "staff") {
+        const session = await adminAPI.login(email, pwd);
+        setLoading(false);
+        const name = session.name || session.username || (role === "owner" ? "Owner" : "Staff");
+        onLogin({ role: role, staffName: name });
       }
-    },1200);
+    } catch (err) {
+      setLoading(false);
+      setErrors({ general: err.message || "Invalid credentials." });
+      setShake(true);
+      setTimeout(() => setShake(false), 500);
+    }
   };
 
-  useEffect(()=>{
-    const existing=loadOrders();
-    if(existing.length===0){
-      const demo=[
-        {id:"ord1",invoiceNumber:"INV-001",customer:{name:"Kofi Mensah",phone:"0241234567"},items:[{name:"Wash & Fold",qty:3,unitPrice:15,subtotal:45},{name:"Ironing Only",qty:2,unitPrice:10,subtotal:20}],total:65,stage:"washing",createdAt:new Date().toISOString()},
-        {id:"ord2",invoiceNumber:"INV-002",customer:{name:"Ama Serwaa",phone:"0557654321"},items:[{name:"Dry Cleaning",qty:1,unitPrice:25,subtotal:25}],total:25,stage:"ready",createdAt:new Date().toISOString(),payment:{method:"cash",amountPaid:25,change:0,note:"",paidAt:new Date().toISOString()}},
-        {id:"ord3",invoiceNumber:"INV-003",customer:{name:"Kwame Asante",phone:"0209876543"},items:[{name:"Duvet/Large",qty:2,unitPrice:35,subtotal:70}],total:70,stage:"drying",createdAt:new Date().toISOString()},
-        {id:"ord4",invoiceNumber:"INV-DEMO001",customer:{name:"Demo Customer",phone:"0200000000"},items:[{name:"Wash & Fold",qty:5,unitPrice:15,subtotal:75}],total:75,stage:"ironing",createdAt:new Date().toISOString()},
-      ];
-      saveOrders(demo);
-    }
-  },[]);
+  // Remove demo data loading - use API only
+  // useEffect(()=>{...},[]);
 
   const staffList = loadStaff();
+
+  // Show setup screen if no admin exists
+  if (needsSetup) {
+    return <AdminSetup onComplete={() => setNeedsSetup(false)} />;
+  }
 
   return(
     <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",padding:16,position:"relative",overflow:"hidden"}}>
