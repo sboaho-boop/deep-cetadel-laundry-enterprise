@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import MapPicker, { MapView } from "../components/MapPicker";
-import { adminAPI, userAPI, USE_API } from "../utils/api";
+import { adminAPI, userAPI } from "../utils/api";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const PRICE_KEY  = "dcl_prices";
@@ -1272,7 +1272,7 @@ function LoginView({onLogin}){
     
     try {
       if (role === "client") {
-        const order = await userAPI.trackOrder(inv.trim().toUpperCase());
+        await userAPI.trackOrder(inv.trim().toUpperCase());
         setLoading(false);
         onLogin({ role: "client", invoice: inv.trim().toUpperCase() });
       } else if (role === "owner" || role === "staff") {

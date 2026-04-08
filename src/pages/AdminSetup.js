@@ -33,7 +33,7 @@ export default function AdminSetup({ onComplete }) {
     setLoading(true);
     setError("");
     try {
-      const result = await setupAPI.createAdmin({
+      await setupAPI.createAdmin({
         action: "create",
         username: form.username,
         password: form.password,

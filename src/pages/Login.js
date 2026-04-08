@@ -617,7 +617,7 @@ function LoginView({onLogin}){
 
     try {
       if (role === "client") {
-        const order = await userAPI.trackOrder(inv.trim().toUpperCase());
+        await userAPI.trackOrder(inv.trim().toUpperCase());
         setLoading(false);
         onLogin({ role: "client", invoice: inv.trim().toUpperCase() });
       } else if (role === "owner" || role === "staff") {
