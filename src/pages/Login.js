@@ -581,21 +581,24 @@ function ForgotPassword({onBack}){
 // LOGIN VIEW
 // ══════════════════════════════════════════════════════════════════════════════
 function LoginView({onLogin}){
-  const [role,setRole]=useState("client"),[email,setEmail]=useState(""),[pwd,setPwd]=useState(""),[inv,setInv]=useState(""),[show,setShow]=useState(false),[remember,setRemember]=useState(false),[loading,setLoading]=useState(false),[errors,setErrors]=useState({}),[shake,setShake]=useState(false),[forgot,setForgot]=useState(false),[loaded,setLoaded]=useState(false),[needsSetup,setNeedsSetup]=useState(null);
-  useEffect(()=>{setTimeout(()=>setLoaded(true),100);},[]);
+  const [role,setRole]=useState("client"),[email,setEmail]=useState(""),[pwd,setPwd]=useState(""),[inv,setInv]=useState(""),[show,setShow]=useState(false),[remember,setRemember]=useState(false),[loading,setLoading]=useState(false),[errors,setErrors]=useState({}),[shake,setShake]=useState(false),[forgot,setForgot]=useState(false),[loaded,setLoaded]=useState(false),[needsSetup,setNeedsSetup]=useState(undefined);
   
-  // Check if admin exists on mount
+  // Check if admin exists on mount - only once
   useEffect(()=>{
+    let cancelled = false;
     const checkAdmin = async () => {
       try {
         const result = await setupAPI.checkAdmin();
-        setNeedsSetup(!result.has_admin);
+        if (!cancelled) setNeedsSetup(!result.has_admin);
       } catch (err) {
-        setNeedsSetup(true); // If API fails, show setup
+        if (!cancelled) setNeedsSetup(true);
       }
     };
     checkAdmin();
+    return () => { cancelled = true; };
   },[]);
+  
+  useEffect(()=>{setTimeout(()=>setLoaded(true),100);},[]);
 
   const ar=ROLES.find(r=>r.key===role);
 
@@ -635,6 +638,18 @@ function LoginView({onLogin}){
   // useEffect(()=>{...},[]);
 
   const staffList = loadStaff();
+
+  // Show loading while checking admin
+  if (needsSetup === undefined) {
+    return (
+      <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:"#0f172a",color:"#fff"}}>
+        <div style={{textAlign:"center"}}>
+          <div style={{width:40,height:40,borderRadius:"50%",border:"3px solid rgba(255,255,255,.1)",borderTopColor:"#00c6e0",animation:"spin 1s linear infinite",margin:"0 auto 16px"}}></div>
+          <p style={{color:"rgba(255,255,255,.5)",fontSize:14}}>Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Show setup screen if no admin exists
   if (needsSetup) {
