@@ -718,7 +718,7 @@ function LoginView({onLogin}){
                 <p style={{color:"rgba(255,255,255,.45)",fontSize:13,marginBottom:24}}>You can now sign in with your credentials.</p>
                 <button onClick={()=>{setForgot(false);setSigningUp(false);setEmail("");setPwd("");}} style={{width:"100%",padding:"14px",borderRadius:12,background:"linear-gradient(135deg,#0077b6,#00c6e0)",color:"#fff",border:"none",fontWeight:700,fontSize:15,fontFamily:"'DM Sans',sans-serif",cursor:"pointer"}}>Go to Login</button>
               </div>}
-            </div>:forgot?<ForgotPassword onBack={()=>setForgot(false)}/>:<>
+            </div>:forgot===true?<ForgotPassword onBack={()=>setForgot(false)}/>:<>
             <div style={{marginBottom:24}}>
               <p style={{color:"rgba(255,255,255,.4)",fontSize:11,letterSpacing:1.5,textTransform:"uppercase",marginBottom:10}}>Sign in as</p>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
