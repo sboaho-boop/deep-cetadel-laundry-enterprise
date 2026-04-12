@@ -687,8 +687,9 @@ function LoginView({onLogin}){
     );
   }
 
-  // Show setup screen if no admin exists
-  if (needsSetup) {
+  // Show setup screen only if explicitly requested via URL or button
+  const showSetup = new URLSearchParams(window.location.search).get("setup") === "true";
+  if (needsSetup || showSetup) {
     return <AdminSetup onComplete={() => setNeedsSetup(false)} />;
   }
 
