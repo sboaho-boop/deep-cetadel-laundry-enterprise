@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars, import/no-anonymous-default-export */
-import { db, auth, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, orderBy, onSnapshot, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, collection, getDoc } from "../firebase";
+import { db, auth, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, orderBy, onSnapshot, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, collection, getDoc, sendPasswordResetEmail } from "../firebase";
 import { useState } from "react";
 
 const USE_API = false;
@@ -136,6 +136,23 @@ export const adminAPI = {
       staff.push({ ...staffData, id: Date.now().toString(), createdAt: new Date().toISOString() });
       saveStaff(staff);
       return { success: true };
+    }
+  },
+
+  signup: async (email, password) => {
+    try {
+      const result = await createUserWithEmailAndPassword(auth, email, password);
+      const staff = loadStaff();
+      const newStaff = { name: "Owner", email, password, role: "owner", active: true, id: result.user.id, createdAt: new Date().toISOString() };
+      staff.push(newStaff);
+      saveStaff(staff);
+      await addDoc(collection(db, "staff"), newStaff);
+      return { success: true, user: result.user };
+    } catch (error) {
+      if (error.code === "auth/email-already-in-use") {
+        throw new Error("Email already registered");
+      }
+      throw new Error(error.message);
     }
   },
 
