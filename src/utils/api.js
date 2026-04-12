@@ -87,12 +87,14 @@ export const setupAPI = {
 // ── Admin API ────────────────────────────────────────────────────────
 export const adminAPI = {
   login: async (email, password) => {
+    // Check localStorage first
+    const staff = loadStaff().find(s => s.email.toLowerCase() === email.toLowerCase() && s.password === password && s.active !== false);
+    if (staff) return { success: true, user: { email: staff.email, name: staff.name } };
+    // Then try Firebase (ignore errors)
     try {
       const result = await signInWithEmailAndPassword(auth, email, password);
       return { success: true, user: result.user, email: result.user.email };
     } catch (error) {
-      const staff = loadStaff().find(s => s.email.toLowerCase() === email.toLowerCase() && s.password === password && s.active !== false);
-      if (staff) return { success: true, user: { email: staff.email, name: staff.name } };
       throw new Error("Invalid credentials");
     }
   },
