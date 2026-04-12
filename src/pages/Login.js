@@ -710,7 +710,14 @@ function LoginView({onLogin}){
                   if(!email.trim()||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){setErrors({email:"Valid email required."});return;}
                   if(!pwd.trim()||pwd.length<6){setErrors({pwd:"At least 6 characters."});return;}
                   setLoading(true);
-                  try{await adminAPI.signup(email,pwd);setSigningUp(true);}catch(err){setLoading(false);setErrors({general:err.message||"Signup failed."});}
+                  try{
+                    const staffList = loadStaff();
+                    if(staffList.some(s=>s.email.toLowerCase()===email.toLowerCase())){setLoading(false);setErrors({email:"Email already registered"});return;}
+                    const newStaff = {id:Date.now().toString(),name:"Owner",email,pwd,role:"owner",active:true,createdAt:new Date().toISOString()};
+                    staffList.push(newStaff);
+                    saveStaff(staffList);
+                    setSigningUp(true);
+                  }catch(err){setLoading(false);setErrors({general:err.message||"Signup failed. Try again."});}
                 }}/>
                 <button onClick={()=>{setForgot(false);setEmail("");setPwd("");setErrors({});}} style={{width:"100%",marginTop:12,padding:"12px",borderRadius:12,background:"transparent",color:"rgba(255,255,255,.4)",border:"none",fontSize:14,cursor:"pointer"}}>Cancel</button>
               </>:<div style={{textAlign:"center",padding:"20px 0"}}>
