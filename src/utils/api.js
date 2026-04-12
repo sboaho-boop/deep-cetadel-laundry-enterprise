@@ -14,7 +14,11 @@ const LS_KEYS = {
 
 export const loadOrders = () => JSON.parse(localStorage.getItem(LS_KEYS.ORDERS) || "[]");
 export const saveOrders = (orders) => localStorage.setItem(LS_KEYS.ORDERS, JSON.stringify(orders));
-export const loadStaff = () => JSON.parse(localStorage.getItem(LS_KEYS.STAFF) || "[]");
+export const loadStaff = () => {
+  const stored = localStorage.getItem(LS_KEYS.STAFF);
+  if (stored) return JSON.parse(stored);
+  return [{ id: "1", name: "Owner", email: "owner@demo.com", password: "owner123", role: "owner", active: true, createdAt: new Date().toISOString() }];
+};
 export const saveStaff = (staff) => localStorage.setItem(LS_KEYS.STAFF, JSON.stringify(staff));
 export const loadServices = () => JSON.parse(localStorage.getItem(LS_KEYS.SERVICES) || "[]");
 export const saveServices = (services) => localStorage.setItem(LS_KEYS.SERVICES, JSON.stringify(services));
