@@ -51,7 +51,7 @@ const DEFAULT_META = {
 const loadOrders  = () => { try { return JSON.parse(localStorage.getItem(ORDERS_KEY)||"[]"); } catch { return []; } };
 const saveOrders  = (orders) => localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
 const loadPrices  = () => { try { const s=localStorage.getItem(PRICE_KEY); return s?JSON.parse(s):DEFAULT_PRICES; } catch { return DEFAULT_PRICES; } };
-const loadStaff   = () => { try { return JSON.parse(localStorage.getItem(STAFF_KEY)||"[]"); } catch { return []; } };
+const loadStaff   = () => { try { const stored=JSON.parse(localStorage.getItem(STAFF_KEY)||"[]"); if(stored.length)return stored; return[{id:"1",name:"Owner",email:"owner@demo.com",password:"owner123",role:"owner",active:true}]; } catch { return[]; } };
 const saveStaff   = (staff) => localStorage.setItem(STAFF_KEY, JSON.stringify(staff));
 
 // ── Sound Engine (Web Audio API — no external deps) ──────────────────────────
@@ -719,7 +719,7 @@ function LoginView({onLogin}){
               {role!=="client"&&<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}><label style={{display:"flex",alignItems:"center",gap:8,cursor:"pointer"}} onClick={()=>setRemember(r=>!r)}><div style={{width:18,height:18,borderRadius:5,border:`2px solid ${remember?"#00c6e0":"rgba(255,255,255,.2)"}`,background:remember?"#00c6e0":"transparent",display:"flex",alignItems:"center",justifyContent:"center",transition:"all .2s"}}>{remember&&<Icon.Check/>}</div><span style={{color:"rgba(255,255,255,.45)",fontSize:13}}>Remember me</span></label><button type="button" onClick={()=>{setForgot(true);setErrors({});}} style={{background:"transparent",border:"none",color:"#00c6e0",fontSize:13,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:600}}>Forgot password?</button></div>}
               <SubmitBtn loading={loading} label="Sign In" type="submit"/>
             </form>
-            {role==="owner"&&<div style={{textAlign:"center",marginTop:16}}><button onClick={async()=>{const staff=loadStaff();if(staff.some(s=>s.role==="owner")){alert("Owner account already exists. Use Forgot Password?");return;}const newStaff={id:Date.now().toString(),name:"Owner",email:"owner@demo.com",pwd:"owner123",role:"owner",active:true,createdAt:new Date().toISOString()};staff.push(newStaff);saveStaff(staff);alert("Owner account created! Email: owner@demo.com Password: owner123");}} style={{background:"transparent",border:"none",color:"#00c6e0",fontSize:13,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:600}}>Create Owner Account</button></div>}
+            {role==="owner"&&<div style={{textAlign:"center",marginTop:16}}><button onClick={async()=>{const staff=loadStaff();if(staff.some(s=>s.role==="owner")){alert("Owner account already exists. Use Forgot Password?");return;}const newStaff={id:Date.now().toString(),name:"Owner",email:"owner@demo.com",password:"owner123",role:"owner",active:true,createdAt:new Date().toISOString()};staff.push(newStaff);saveStaff(staff);alert("Owner account created! Email: owner@demo.com Password: owner123");}} style={{background:"transparent",border:"none",color:"#00c6e0",fontSize:13,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:600}}>Create Owner Account</button></div>}
             {/* Demo credentials section */}
             <div style={{marginTop:18,padding:"13px 16px",borderRadius:12,background:"rgba(0,198,224,.05)",border:"1px solid rgba(0,198,224,.1)"}}>
               {role==="client"&&<>
