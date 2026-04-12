@@ -773,7 +773,6 @@ function LoginView({onLogin}){
                 </div>
               </>}
             </div>
-          </>}
         </div>
         <div style={{textAlign:"center",marginTop:20}}>
           <p style={{color:"rgba(255,255,255,.2)",fontSize:12}}>© {new Date().getFullYear()} <span style={{color:"rgba(255,255,255,.35)",fontFamily:"'Cinzel',serif"}}>Deep Citadel</span> · Powerful Clean. Trusted Care.</p>
