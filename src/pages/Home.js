@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/label-has-associated-control */
 import { useState, useEffect, useRef } from "react";
 import MapPicker, { MapView } from "../components/MapPicker";
 import { adminAPI, userAPI } from "../utils/api";
@@ -348,7 +349,7 @@ function PaymentModal({ order, onClose, onPaid }) {
           </div>
           <div style={{ marginBottom:24 }}>
             <label style={{ display:"block",fontSize:11,color:"rgba(255,255,255,.4)",letterSpacing:1.2,textTransform:"uppercase",marginBottom:8 }}>Note (optional)</label>
-            <input type="text" placeholder="e.g. Paid in full, partial deposit…" value={note} onChange={e => setNote(e.target.value)} style={{ width:"100%",padding:"11px 14px",borderRadius:12,border:"1px solid rgba(255,255,255,.1)",background:"rgba(255,255,255,.04)",color:"#fff",fontSize:13,fontFamily:"'DM Sans',sans-serif",outline:"none" }}/>
+            <input name="note" type="text" placeholder="e.g. Paid in full, partial deposit…" value={note} onChange={e => setNote(e.target.value)} style={{ width:"100%",padding:"11px 14px",borderRadius:12,border:"1px solid rgba(255,255,255,.1)",background:"rgba(255,255,255,.04)",color:"#fff",fontSize:13,fontFamily:"'DM Sans',sans-serif",outline:"none" }}/>
           </div>
           <div style={{ display:"flex",gap:10 }}>
             <button onClick={onClose} style={{ flex:1,padding:"13px",borderRadius:12,border:"1px solid rgba(255,255,255,.1)",background:"rgba(255,255,255,.04)",color:"rgba(255,255,255,.5)",fontFamily:"'Syne',sans-serif",fontWeight:600,fontSize:13,cursor:"pointer" }}>Cancel</button>
@@ -732,7 +733,11 @@ function SchedulePickupModal({ customer, onClose, onSubmit }) {
     }
   };
 
-  const f = (field, val) => { setForm(p=>({...p,[field]:val})); setErrors(p=>({...p,[field]:""})); };
+  const f = (field, val) => { 
+    // console.log(`f(${field}):`, val);
+    setForm(p=>({...p,[field]:val})); 
+    setErrors(p=>({...p,[field]:""})); 
+  };
 
   const inputBase = (hasErr) => ({
     width:"100%", padding:"11px 14px", borderRadius:12,
@@ -761,7 +766,7 @@ function SchedulePickupModal({ customer, onClose, onSubmit }) {
           <label style={{display:"block",fontSize:11,color:"rgba(255,255,255,.4)",letterSpacing:1.2,textTransform:"uppercase",marginBottom:8}}>Your Name *</label>
           <div style={{position:"relative",marginBottom:errors.name?4:16}}>
             <span style={{position:"absolute",left:14,top:"50%",transform:"translateY(-50%)",color:"rgba(255,255,255,.3)",display:"flex"}}><Icon.User/></span>
-            <input type="text" placeholder="e.g. Kofi Mensah" value={form.name} onChange={e=>f("name",e.target.value)}
+            <input name="name" type="text" placeholder="e.g. Kofi Mensah" value={form.name} onChange={e=>f("name",e.target.value)}
               style={{...inputBase(errors.name), paddingLeft:42}}/>
           </div>
           {errors.name&&<p style={{color:"#fca5a5",fontSize:11,marginBottom:12,display:"flex",gap:4,alignItems:"center"}}><Icon.Alert/>{errors.name}</p>}
@@ -786,7 +791,7 @@ function SchedulePickupModal({ customer, onClose, onSubmit }) {
           <label style={{display:"block",fontSize:11,color:"rgba(255,255,255,.4)",letterSpacing:1.2,textTransform:"uppercase",marginBottom:8}}>Contact Phone</label>
           <div style={{position:"relative",marginBottom:errors.phone?4:16}}>
             <span style={{position:"absolute",left:14,top:"50%",transform:"translateY(-50%)",color:"rgba(255,255,255,.3)",display:"flex"}}><Icon.Phone/></span>
-            <input type="tel" placeholder="e.g. 0241234567" value={form.phone} onChange={e=>f("phone",e.target.value)}
+            <input name="phone" type="tel" placeholder="e.g. 0241234567" value={form.phone} onChange={e=>f("phone",e.target.value)}
               style={{...inputBase(errors.phone), paddingLeft:42}}/>
           </div>
           {errors.phone&&<p style={{color:"#fca5a5",fontSize:11,marginBottom:12,display:"flex",gap:4,alignItems:"center"}}><Icon.Alert/>{errors.phone}</p>}
@@ -801,9 +806,9 @@ function SchedulePickupModal({ customer, onClose, onSubmit }) {
           {errors.address&&<p style={{color:"#fca5a5",fontSize:11,marginTop:4,marginBottom:8,display:"flex",gap:4,alignItems:"center"}}><Icon.Alert/>{errors.address}</p>}
 
           {/* Address text */}
-          <input type="text" placeholder="Address label (e.g. Kwabena's House, East Legon)…" value={form.address} onChange={e=>f("address",e.target.value)}
+          <input name="address" type="text" placeholder="Address label (e.g. Kwabena's House, East Legon)…" value={form.address} onChange={e=>f("address",e.target.value)}
             style={{...inputBase(false), marginBottom:10, fontSize:12}}/>
-          <input type="text" placeholder="Landmark / extra directions (optional)" value={form.addressNote} onChange={e=>f("addressNote",e.target.value)}
+          <input name="addressNote" type="text" placeholder="Landmark / extra directions (optional)" value={form.addressNote} onChange={e=>f("addressNote",e.target.value)}
             style={{...inputBase(false), marginBottom:16, fontSize:12, color:"rgba(255,255,255,.6)"}}/>
 
           {/* Service Selection */}
@@ -981,7 +986,7 @@ function PickupPaymentModal({ onClose }) {
           </div>
           <div style={{position:"relative",marginBottom:invErr?4:20}}>
             <span style={{position:"absolute",left:14,top:"50%",transform:"translateY(-50%)",color:"rgba(255,255,255,.3)",display:"flex"}}><Icon.Invoice/></span>
-            <input type="text" placeholder="e.g. INV-005" value={invInput}
+            <input name="invoice" type="text" placeholder="e.g. INV-005" value={invInput}
               onChange={e=>{setInvInput(e.target.value.toUpperCase());setInvErr("");}}
               onKeyDown={e=>e.key==="Enter"&&lookupInvoice()}
               style={{width:"100%",padding:"13px 14px 13px 42px",borderRadius:12,border:`1.5px solid ${invErr?"#ef4444":invInput?"#00c6e0":"rgba(255,255,255,.12)"}`,background:"rgba(255,255,255,.06)",color:"#fff",fontSize:15,fontFamily:"monospace",fontWeight:700,outline:"none"}}/>
@@ -1235,20 +1240,7 @@ function LoginView({onLogin}){
     return ()=>document.removeEventListener("mousedown",handler);
   },[]);
 
-  // Seed demo orders
-  useEffect(()=>{
-    if(loadOrders().length===0){
-      saveOrders([
-        {id:"ord1",invoiceNumber:"INV-001",customer:{name:"Kofi Mensah",phone:"0241234567"},items:[{name:"Wash & Fold",qty:3,unitPrice:15,subtotal:45},{name:"Ironing Only",qty:2,unitPrice:10,subtotal:20}],total:65,stage:"washing",createdAt:new Date().toISOString()},
-        {id:"ord2",invoiceNumber:"INV-002",customer:{name:"Ama Serwaa",phone:"0557654321"},items:[{name:"Dry Cleaning",qty:1,unitPrice:25,subtotal:25}],total:25,stage:"ready",createdAt:new Date().toISOString(),payment:{method:"cash",amountPaid:25,change:0,note:"",paidAt:new Date().toISOString()}},
-        {id:"ord3",invoiceNumber:"INV-003",customer:{name:"Kwame Asante",phone:"0209876543"},items:[{name:"Duvet/Large",qty:2,unitPrice:35,subtotal:70}],total:70,stage:"drying",createdAt:new Date().toISOString()},
-        {id:"ord4",invoiceNumber:"INV-DEMO001",customer:{name:"Demo Customer",phone:"0200000000"},items:[{name:"Wash & Fold",qty:5,unitPrice:15,subtotal:75}],total:75,stage:"ironing",createdAt:new Date().toISOString()},
-      ]);
-    }
-  },[]);
-
   const ar = ROLES.find(r=>r.key===role);
-  const staffList = loadStaff();
 
   const validate=()=>{
     const e={};
@@ -1282,16 +1274,19 @@ function LoginView({onLogin}){
         onLogin({ role: role, staffName: name });
       }
     } catch (err) {
-      console.log("API login failed:", err.message);
-      // Fallback to localStorage
+      console.log("API failed, using localStorage:", err.message);
       setTimeout(() => {
         if (role === "client") {
           const found = loadOrders().find(o => o.invoiceNumber?.toUpperCase() === inv.trim().toUpperCase());
           if (found) onLogin({ role: "client", invoice: inv.trim().toUpperCase() });
           else { setLoading(false); setErrors({ general: "Invoice not found." }); setShake(true); setTimeout(() => setShake(false), 500); }
-        } else if (role === "owner" || role === "staff") {
-          // Fallback removed - use API only
-          setLoading(false); setErrors({ general: "API connection failed. Please check backend." }); setShake(true); setTimeout(() => setShake(false), 500);
+        } else if (role === "owner") {
+          // No owner login - must sign up via email confirmation
+          setLoading(false); setErrors({ general: "Please sign up for an owner account." }); setShake(true); setTimeout(() => setShake(false), 500);
+        } else if (role === "staff") {
+          const found = loadStaff().find(s => s.email.toLowerCase() === email.toLowerCase() && s.password === pwd && s.active !== false);
+          if (found) onLogin({ role: "staff", staffName: found.name });
+          else { setLoading(false); setErrors({ general: "Invalid credentials." }); setShake(true); setTimeout(() => setShake(false), 500); }
         }
       }, 300);
     }
@@ -1515,30 +1510,19 @@ function LoginView({onLogin}){
 
       {/* Fields */}
       {role==="client" ? <>
-        <LoginInput icon={<Icon.Invoice/>} type="text" placeholder="Invoice number (e.g. INV-001)" value={inv} error={errors.inv}
+        <LoginInput name="invoice" icon={<Icon.Invoice/>} type="text" placeholder="Invoice number (e.g. INV-001)" value={inv} error={errors.inv}
           onChange={e=>{setInv(e.target.value.toUpperCase());setErrors(p=>({...p,inv:"",general:""}));}}/>
         <div style={{padding:"9px 12px",borderRadius:10,background:"rgba(0,198,224,.05)",border:"1px solid rgba(0,198,224,.1)",marginBottom:12}}>
           <p style={{color:"rgba(255,255,255,.35)",fontSize:11,lineHeight:1.6}}>📄 Invoice number is printed on your receipt.</p>
-          <div style={{display:"flex",flexWrap:"wrap",gap:5,marginTop:8}}>
-            {["INV-DEMO001","INV-001","INV-002","INV-003"].map(i=>(
-              <span key={i} onClick={()=>setInv(i)} style={{padding:"2px 8px",borderRadius:20,background:"rgba(0,198,224,.1)",border:"1px solid rgba(0,198,224,.2)",color:"#00c6e0",fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"monospace"}}>{i}</span>
-            ))}
-          </div>
         </div>
       </> : <>
-        <LoginInput icon={<Icon.Mail/>} type="email" placeholder="Email address" value={email} error={errors.email}
+        <LoginInput name="email" icon={<Icon.Mail/>} type="email" placeholder="Email address" value={email} error={errors.email}
           onChange={e=>{setEmail(e.target.value);setErrors(p=>({...p,email:"",general:""}));}}/>
-        <LoginInput icon={<Icon.Lock/>} type={show?"text":"password"} placeholder="Password" value={pwd} error={errors.pwd}
+        <LoginInput name="password" icon={<Icon.Lock/>} type={show?"text":"password"} placeholder="Password" value={pwd} error={errors.pwd}
           onChange={e=>{setPwd(e.target.value);setErrors(p=>({...p,pwd:"",general:""}));}}
           right={<button type="button" onClick={()=>setShow(s=>!s)} style={{background:"transparent",border:"none",cursor:"pointer",color:"rgba(255,255,255,.35)",display:"flex",alignItems:"center",padding:0}}>{show?<Icon.EyeOff/>:<Icon.Eye/>}</button>}/>
-        {/* Demo hints */}
-        <div style={{padding:"9px 12px",borderRadius:10,background:"rgba(0,198,224,.04)",border:"1px solid rgba(0,198,224,.09)",marginBottom:12}}>
-          {role==="staff"&&staffList.length===0&&<p style={{color:"rgba(255,255,255,.22)",fontSize:11}}>No staff accounts yet — owner creates them in the Dashboard.</p>}
-          {role==="staff"&&staffList.filter(s=>s.active!==false).length>0&&<div style={{display:"flex",flexDirection:"column",gap:3}}>{staffList.filter(s=>s.active!==false).map(s=><div key={s.id} onClick={()=>{setEmail(s.email);setPwd(s.password);}} style={{display:"flex",justifyContent:"space-between",padding:"4px 7px",borderRadius:7,background:"rgba(16,185,129,.06)",border:"1px solid rgba(16,185,129,.14)",cursor:"pointer"}} onMouseEnter={e=>e.currentTarget.style.background="rgba(16,185,129,.13)"} onMouseLeave={e=>e.currentTarget.style.background="rgba(16,185,129,.06)"}><span style={{color:"#10b981",fontSize:11,fontWeight:700}}>{s.name}</span><span style={{color:"rgba(255,255,255,.25)",fontSize:10,fontFamily:"monospace"}}>{s.email.split("@")[0]}</span></div>)}</div>}
-          {role==="owner"&&<p style={{color:"rgba(245,158,11,.7)",fontSize:11,fontFamily:"monospace"}}>owner@deepcitadel.com / owner123</p>}
-        </div>
       </>}
-
+      
       <SubmitBtn loading={loading} label="Sign In →" onClick={handleLogin}/>
 
       {/* Quick actions below form */}
@@ -1686,7 +1670,7 @@ function LoginView({onLogin}){
         <h2 className="lp-section-title">Stay Updated</h2>
         <p className="lp-section-sub">Subscribe for exclusive deals and laundry tips</p>
         <div style={{display:"flex",gap:12,maxWidth:460,margin:"0 auto",flexWrap:"wrap",justifyContent:"center"}}>
-          <input type="email" placeholder="Enter your email address" style={{flex:1,minWidth:200,padding:"12px 18px",borderRadius:50,border:"1px solid #d0dce8",fontSize:14,fontFamily:"'DM Sans',sans-serif",outline:"none",background:"white"}}/>
+          <input name="subscribe-email" type="email" placeholder="Enter your email address" style={{flex:1,minWidth:200,padding:"12px 18px",borderRadius:50,border:"1px solid #d0dce8",fontSize:14,fontFamily:"'DM Sans',sans-serif",outline:"none",background:"white"}}/>
           <button onClick={()=>alert("Thank you for subscribing!")} style={{padding:"12px 26px",borderRadius:50,background:"linear-gradient(135deg,#0077b6,#00c6e0)",color:"white",border:"none",fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontSize:14}}>Subscribe</button>
         </div>
       </section>
@@ -2490,7 +2474,7 @@ function StaffManagement() {
             <label style={{ display:"block",fontSize:11,color:"rgba(255,255,255,.4)",letterSpacing:1.2,textTransform:"uppercase",marginBottom:8 }}>Full Name</label>
             <div style={{ position:"relative",marginBottom:formErr.name?4:16 }}>
               <span style={{ position:"absolute",left:14,top:"50%",transform:"translateY(-50%)",color:"rgba(255,255,255,.3)",display:"flex" }}><Icon.User/></span>
-              <input type="text" placeholder="e.g. Abena Owusu" value={form.name} onChange={e=>{setForm(p=>({...p,name:e.target.value}));setFormErr(p=>({...p,name:""}));}} style={{ ...inputStyle(formErr.name), paddingLeft:42 }}/>
+              <input name="staff-name" type="text" placeholder="e.g. Abena Owusu" value={form.name} onChange={e=>{setForm(p=>({...p,name:e.target.value}));setFormErr(p=>({...p,name:""}));}} style={{ ...inputStyle(formErr.name), paddingLeft:42 }}/>
             </div>
             {formErr.name&&<p style={{ color:"#fca5a5",fontSize:11,marginBottom:12,display:"flex",gap:4,alignItems:"center" }}><Icon.Alert/>{formErr.name}</p>}
 
@@ -2498,7 +2482,7 @@ function StaffManagement() {
             <label style={{ display:"block",fontSize:11,color:"rgba(255,255,255,.4)",letterSpacing:1.2,textTransform:"uppercase",marginBottom:8 }}>Email Address</label>
             <div style={{ position:"relative",marginBottom:formErr.email?4:16 }}>
               <span style={{ position:"absolute",left:14,top:"50%",transform:"translateY(-50%)",color:"rgba(255,255,255,.3)",display:"flex" }}><Icon.Mail/></span>
-              <input type="email" placeholder="e.g. abena@deepcitadel.com" value={form.email} onChange={e=>{setForm(p=>({...p,email:e.target.value}));setFormErr(p=>({...p,email:""}));}} style={{ ...inputStyle(formErr.email), paddingLeft:42 }}/>
+              <input name="staff-email" type="email" placeholder="e.g. abena@deepcitadel.com" value={form.email} onChange={e=>{setForm(p=>({...p,email:e.target.value}));setFormErr(p=>({...p,email:""}));}} style={{ ...inputStyle(formErr.email), paddingLeft:42 }}/>
             </div>
             {formErr.email&&<p style={{ color:"#fca5a5",fontSize:11,marginBottom:12,display:"flex",gap:4,alignItems:"center" }}><Icon.Alert/>{formErr.email}</p>}
 
@@ -2508,7 +2492,7 @@ function StaffManagement() {
             </label>
             <div style={{ position:"relative",marginBottom:formErr.password?4:16 }}>
               <span style={{ position:"absolute",left:14,top:"50%",transform:"translateY(-50%)",color:"rgba(255,255,255,.3)",display:"flex" }}><Icon.Key/></span>
-              <input type={showPwd?"text":"password"} placeholder={editTarget?"Leave blank to keep unchanged":"Min. 6 characters"} value={form.password} onChange={e=>{setForm(p=>({...p,password:e.target.value}));setFormErr(p=>({...p,password:""}));}} style={{ ...inputStyle(formErr.password), paddingLeft:42, paddingRight:42 }}/>
+              <input name="staff-password" type={showPwd?"text":"password"} placeholder={editTarget?"Leave blank to keep unchanged":"Min. 6 characters"} value={form.password} onChange={e=>{setForm(p=>({...p,password:e.target.value}));setFormErr(p=>({...p,password:""}));}} style={{ ...inputStyle(formErr.password), paddingLeft:42, paddingRight:42 }}/>
               <button type="button" onClick={()=>setShowPwd(s=>!s)} style={{ position:"absolute",right:14,top:"50%",transform:"translateY(-50%)",background:"transparent",border:"none",color:"rgba(255,255,255,.35)",cursor:"pointer",display:"flex",alignItems:"center",padding:0 }}>{showPwd?<Icon.EyeOff/>:<Icon.Eye/>}</button>
             </div>
             {formErr.password&&<p style={{ color:"#fca5a5",fontSize:11,marginBottom:12,display:"flex",gap:4,alignItems:"center" }}><Icon.Alert/>{formErr.password}</p>}

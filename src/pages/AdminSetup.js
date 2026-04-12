@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { setupAPI } from "../utils/api";
+import { setupAPI, loadStaff } from "../utils/api";
 
 export default function AdminSetup({ onComplete }) {
   const [step, setStep] = useState(1);
@@ -12,16 +12,19 @@ export default function AdminSetup({ onComplete }) {
     setLoading(true);
     setError("");
     try {
-      const result = await setupAPI.checkAdmin();
+      // Use localStorage/Firebase instead of Django
+      const staff = loadStaff();
+      const hasOwner = staff.some(s => s.role === "owner");
       setLoading(false);
-      if (result.has_admin) {
+      if (hasOwner) {
         setStep(2); // Admin exists, go to login
       } else {
         setStep(1); // Need to create admin
       }
     } catch (err) {
       setLoading(false);
-      setError("Cannot connect to backend. Make sure server is running at JoeKelly.pythonanywhere.com");
+      setError("Please create an owner account using the login page.");
+      setStep(1);
     }
   };
 
@@ -33,14 +36,16 @@ export default function AdminSetup({ onComplete }) {
     setLoading(true);
     setError("");
     try {
-      await setupAPI.createAdmin({
-        action: "create",
-        username: form.username,
+      // Save to localStorage/Firebase
+      await setupAPI.createStaff({
+        name: form.username,
+        email: form.email,
         password: form.password,
-        email: form.email
+        role: "owner",
+        active: true
       });
       setLoading(false);
-      setSuccess(`Admin created! Username: ${form.username}, Password: ${form.password}`);
+      setSuccess(`Owner created! Username: ${form.username}, Password: ${form.password}`);
       setTimeout(() => onComplete(), 3000);
     } catch (err) {
       setLoading(false);

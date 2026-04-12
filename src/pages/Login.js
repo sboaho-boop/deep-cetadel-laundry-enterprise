@@ -1,5 +1,7 @@
+/* eslint-disable jsx-a11y/label-has-associated-control */
 import { useState, useEffect, useRef } from "react";
 import { adminAPI, userAPI, setupAPI } from "../utils/api";
+import { auth, sendPasswordResetEmail } from "../firebase";
 import AdminSetup from "./AdminSetup";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -563,16 +565,50 @@ function OrderProgressBar({stage}){
 
 // ── Forgot Password ───────────────────────────────────────────────────────────
 function ForgotPassword({onBack}){
-  const [step,setStep]=useState(1),[email,setEmail]=useState(""),[otp,setOtp]=useState(["","","","","",""]),[loading,setLoading]=useState(false),[error,setError]=useState("");
-  const sendOTP=()=>{if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){setError("Enter a valid email.");return;}setLoading(true);setTimeout(()=>{setLoading(false);setStep(2);},1200);};
-  const verifyOTP=()=>{if(otp.join("").length<6){setError("Enter the full 6-digit code.");return;}setLoading(true);setTimeout(()=>{setLoading(false);setStep(3);},1000);};
-  const ho=(i,v)=>{if(!/^\d?$/.test(v))return;const n=[...otp];n[i]=v;setOtp(n);if(v&&i<5)document.getElementById(`otp-${i+1}`)?.focus();};
+  const [step,setStep]=useState(1),[email,setEmail]=useState(""),[loading,setLoading]=useState(false),[error,setError]=useState(""),[success,setSuccess]=useState("");
+  
+  const sendReset = async () => {
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+      setError("Enter a valid email.");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      await sendPasswordResetEmail(auth, email);
+      setLoading(false);
+      setSuccess("Password reset link sent! Check your email.");
+      setStep(2);
+    } catch (err) {
+      setLoading(false);
+      // If user doesn't exist in Firebase Auth, show success anyway for security
+      if (err.code === "auth/user-not-found") {
+        setSuccess("If that email exists, a reset link has been sent.");
+        setStep(2);
+      } else {
+        setError(err.message || "Failed to send reset email");
+      }
+    }
+  };
+  
   return(
     <div style={{animation:"slideUp .4s ease"}}>
       <button onClick={onBack} style={{background:"transparent",border:"none",color:"rgba(255,255,255,.5)",cursor:"pointer",display:"flex",alignItems:"center",gap:6,fontSize:13,marginBottom:20,fontFamily:"'DM Sans',sans-serif"}}><Icon.ArrowLeft/> Back to Login</button>
-      {step===1&&<><h2 style={{fontFamily:"'Cinzel',serif",color:"#fff",fontSize:20,marginBottom:8}}>Forgot Password?</h2><p style={{color:"rgba(255,255,255,.45)",fontSize:13,marginBottom:24,lineHeight:1.6}}>Enter your email and we'll send a reset code.</p><LoginInput icon={<Icon.Mail/>} type="email" placeholder="Your email" value={email} error={error} onChange={e=>{setEmail(e.target.value);setError("");}}/><SubmitBtn loading={loading} label="Send Reset Code" onClick={sendOTP}/></>}
-      {step===2&&<><h2 style={{fontFamily:"'Cinzel',serif",color:"#fff",fontSize:20,marginBottom:8}}>Check Your Email</h2><p style={{color:"rgba(255,255,255,.45)",fontSize:13,marginBottom:24}}>Code sent to <span style={{color:"#00c6e0"}}>{email}</span></p><div style={{display:"flex",gap:8,justifyContent:"center",marginBottom:20}}>{otp.map((v,i)=><input key={i} id={`otp-${i}`} type="text" maxLength={1} value={v} onChange={e=>ho(i,e.target.value)} onKeyDown={e=>{if(e.key==="Backspace"&&!v&&i>0)document.getElementById(`otp-${i-1}`)?.focus();}} style={{width:44,height:52,borderRadius:12,border:`2px solid ${v?"#00c6e0":"rgba(255,255,255,.15)"}`,background:"rgba(255,255,255,.06)",color:"#fff",fontSize:22,textAlign:"center",fontFamily:"'Cinzel',serif",outline:"none"}}/>)}</div>{error&&<p style={{color:"#fca5a5",fontSize:11,display:"flex",alignItems:"center",gap:4,marginBottom:12}}><Icon.Alert/>{error}</p>}<SubmitBtn loading={loading} label="Verify Code" onClick={verifyOTP}/></>}
-      {step===3&&<div style={{textAlign:"center"}}><div style={{width:64,height:64,borderRadius:"50%",background:"rgba(16,185,129,.15)",border:"2px solid #10b981",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 16px"}}><span style={{color:"#10b981",fontSize:28}}>✓</span></div><h3 style={{fontFamily:"'Cinzel',serif",color:"#fff",fontSize:18,marginBottom:8}}>Code Verified!</h3><p style={{color:"rgba(255,255,255,.45)",fontSize:13,marginBottom:24}}>Reset complete for demo.</p><button onClick={onBack} style={{width:"100%",padding:"14px",borderRadius:12,background:"linear-gradient(135deg,#0077b6,#00c6e0)",color:"#fff",border:"none",fontWeight:700,fontSize:15,fontFamily:"'DM Sans',sans-serif",cursor:"pointer"}}>Back to Login</button></div>}
+      {step===1&&<>
+        <h2 style={{fontFamily:"'Cinzel',serif",color:"#fff",fontSize:20,marginBottom:8}}>Forgot Password?</h2>
+        <p style={{color:"rgba(255,255,255,.45)",fontSize:13,marginBottom:24,lineHeight:1.6}}>Enter your email and we'll send a password reset link.</p>
+        <LoginInput icon={<Icon.Mail/>} type="email" placeholder="Your email" value={email} error={error} onChange={e=>{setEmail(e.target.value);setError("");}}/>
+        {error && <p style={{color:"#fca5a5",fontSize:12,marginBottom:12}}>{error}</p>}
+        <SubmitBtn loading={loading} label="Send Reset Link" onClick={sendReset}/>
+      </>}
+      {step===2&&<>
+        <div style={{textAlign:"center",padding:"20px 0"}}>
+          <div style={{width:64,height:64,borderRadius:"50%",background:"rgba(16,185,129,.15)",border:"2px solid #10b981",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 16px"}}><span style={{color:"#10b981",fontSize:28}}>✓</span></div>
+          <h3 style={{fontFamily:"'Cinzel',serif",color:"#fff",fontSize:18,marginBottom:8}}>Check Your Email</h3>
+          <p style={{color:"rgba(255,255,255,.45)",fontSize:13,marginBottom:24}}>{success}</p>
+          <button onClick={onBack} style={{width:"100%",padding:"14px",borderRadius:12,background:"linear-gradient(135deg,#0077b6,#00c6e0)",color:"#fff",border:"none",fontWeight:700,fontSize:15,fontFamily:"'DM Sans',sans-serif",cursor:"pointer"}}>Back to Login</button>
+        </div>
+      </>}
     </div>
   );
 }

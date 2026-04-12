@@ -28,4 +28,9 @@ urlpatterns = [
     path('user/staff/orders/<str:invoice_id>/', views.track_order, name='track_order'),
     path('user/staff/orders/<str:invoice_id>/update/', views.update_order_status, name='update_order_status'),
     path('user/staff/orders/<str:invoice_id>/pay/', views.record_payment, name='record_payment'),
+    
+    # Owner signup with email confirmation
+    path('owner/check/', views.check_owner_exists, name='check_owner_exists'),
+    path('owner/signup/', views.owner_signup, name='owner_signup'),
+    path('owner/confirm/<str:token>/', views.confirm_email, name='confirm_email'),
 ]

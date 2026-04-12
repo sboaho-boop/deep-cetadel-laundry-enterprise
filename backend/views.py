@@ -2,9 +2,38 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
+from django.utils import timezone
 import json
+import hashlib
+import secrets
+import datetime
 
 User = get_user_model()
+
+# Simple token storage (in production, use database)
+confirmation_tokens = {}
+
+def generate_token(email):
+    """Generate a unique confirmation token"""
+    token = secrets.token_urlsafe(32)
+    confirmation_tokens[token] = {
+        'email': email,
+        'created_at': timezone.now(),
+        'verified': False
+    }
+    return token
+
+def send_confirmation_email(email, token):
+    """
+    In production, integrate with email service (SendGrid, SMTP, etc.)
+    For now, log the confirmation link for testing
+    """
+    # This would be replaced with actual email sending
+    print(f"=== EMAIL CONFIRMATION ===")
+    print(f"To: {email}")
+    print(f"Confirmation Link: https://deep-citadel-laundry.vercel.app/confirm/{token}")
+    print(f"=========================")
+    return True
 
 @csrf_exempt
 def admin_setup(request):
@@ -236,3 +265,107 @@ def record_payment(request, invoice_id):
         except Order.DoesNotExist:
             return JsonResponse({'error': 'Order not found'}, status=404)
     return JsonResponse({'error': 'Invalid request'}, status=400)
+
+# ── Owner Signup with Email Confirmation ───────────────────────────────────────
+@csrf_exempt
+def owner_signup(request):
+    """Owner signup with email confirmation - only one owner allowed"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+        except:
+            return JsonResponse({'error': 'Invalid request'}, status=400)
+        
+        email = data.get('email', '').strip().lower()
+        password = data.get('password', '')
+        
+        # Validate
+        if not email:
+            return JsonResponse({'success': False, 'error': 'Email is required'})
+        if not password or len(password) < 6:
+            return JsonResponse({'success': False, 'error': 'Password must be at least 6 characters'})
+        
+        # Check if owner already exists
+        has_owner = User.objects.filter(is_superuser=True).exists()
+        if has_owner:
+            return JsonResponse({'success': False, 'error': 'Owner account already exists. Contact support to reset.'})
+        
+        # Check if email already registered (but not confirmed)
+        for token, data_info in confirmation_tokens.items():
+            if data_info['email'] == email and not data_info['verified']:
+                return JsonResponse({'success': False, 'error': 'Confirmation already sent. Check your email or wait 24 hours.'})
+        
+        # Check if email already has an account
+        if User.objects.filter(email=email).exists():
+            return JsonResponse({'success': False, 'error': 'Email already registered. Try login or reset password.'})
+        
+        # Generate confirmation token
+        token = generate_token(email)
+        
+        # Store pending user data temporarily
+        confirmation_tokens[token]['password'] = password
+        confirmation_tokens[token]['action'] = 'owner_signup'
+        
+        # Send confirmation email
+        send_confirmation_email(email, token)
+        
+        return JsonResponse({
+            'success': True, 
+            'message': 'Confirmation email sent. Please check your inbox.',
+            'token': token  # For testing purposes
+        })
+    
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
+@csrf_exempt
+def confirm_email(request, token):
+    """Confirm email address and create owner account"""
+    if request.method == 'POST':
+        token_data = confirmation_tokens.get(token)
+        
+        if not token_data:
+            return JsonResponse({'success': False, 'error': 'Invalid or expired token'})
+        
+        if token_data.get('verified'):
+            return JsonResponse({'success': False, 'error': 'Email already verified'})
+        
+        # Check token expiration (24 hours)
+        if (timezone.now() - token_data['created_at']).total_seconds() > 86400:
+            del confirmation_tokens[token]
+            return JsonResponse({'success': False, 'error': 'Token expired. Please request a new confirmation.'})
+        
+        email = token_data['email']
+        password = token_data.get('password', '')
+        
+        # Create the owner user
+        username = email.split('@')[0][:150]  # Django username max length
+        base_username = username
+        counter = 1
+        while User.objects.filter(username=username).exists():
+            username = f"{base_username}{counter}"
+            counter += 1
+        
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            password=password,
+            is_staff=True,
+            is_superuser=True
+        )
+        
+        # Mark token as verified
+        confirmation_tokens[token]['verified'] = True
+        confirmation_tokens[token]['user_id'] = user.id
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Owner account created successfully!',
+            'username': username
+        })
+    
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
+def check_owner_exists(request):
+    """Check if owner account already exists"""
+    has_owner = User.objects.filter(is_superuser=True).exists()
+    return JsonResponse({'has_owner': has_owner})
