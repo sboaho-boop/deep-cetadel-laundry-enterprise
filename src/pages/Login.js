@@ -1,4 +1,4 @@
-/* eslint-disable jsx-a11y/label-has-associated-control */
+/* eslint-disable jsx-a11y/label-has-associated-control, no-unused-vars */
 import { useState, useEffect, useRef } from "react";
 import { adminAPI, userAPI, setupAPI } from "../utils/api";
 import { auth, sendPasswordResetEmail } from "../firebase";
@@ -617,7 +617,7 @@ function ForgotPassword({onBack}){
 // LOGIN VIEW
 // ══════════════════════════════════════════════════════════════════════════════
 function LoginView({onLogin}){
-  const [role,setRole]=useState("client"),[email,setEmail]=useState(""),[pwd,setPwd]=useState(""),[inv,setInv]=useState(""),[show,setShow]=useState(false),[remember,setRemember]=useState(false),[loading,setLoading]=useState(false),[errors,setErrors]=useState({}),[shake,setShake]=useState(false),[forgot,setForgot]=useState(false),[loaded,setLoaded]=useState(false),[needsSetup,setNeedsSetup]=useState(undefined),[signup,setSignup]=useState(false),[signingUp,setSigningUp]=useState(false);
+  const [role,setRole]=useState("client"),[email,setEmail]=useState(""),[pwd,setPwd]=useState(""),[inv,setInv]=useState(""),[show,setShow]=useState(false),[remember,setRemember]=useState(false),[loading,setLoading]=useState(false),[errors,setErrors]=useState({}),[shake,setShake]=useState(false),[forgot,setForgot]=useState(false),[loaded,setLoaded]=useState(false),[needsSetup,setNeedsSetup]=useState(undefined),[signingUp,setSigningUp]=useState(false);
   
   // Check if admin exists on mount - only once
   useEffect(()=>{
