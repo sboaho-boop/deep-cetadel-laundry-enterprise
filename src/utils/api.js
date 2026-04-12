@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars, import/no-anonymous-default-export */
+// eslint-disable-next-line no-unused-vars
 import { db, auth, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, orderBy, onSnapshot, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, collection, getDoc, sendPasswordResetEmail } from "../firebase";
-import { useState } from "react";
 
 const USE_API = false;
 
@@ -87,16 +87,10 @@ export const setupAPI = {
 // ── Admin API ────────────────────────────────────────────────────────
 export const adminAPI = {
   login: async (email, password) => {
-    // Check localStorage first
+    // Only use localStorage (no Firebase)
     const staff = loadStaff().find(s => s.email.toLowerCase() === email.toLowerCase() && s.password === password && s.active !== false);
     if (staff) return { success: true, user: { email: staff.email, name: staff.name } };
-    // Then try Firebase (ignore errors)
-    try {
-      const result = await signInWithEmailAndPassword(auth, email, password);
-      return { success: true, user: result.user, email: result.user.email };
-    } catch (error) {
-      throw new Error("Invalid credentials");
-    }
+    throw new Error("Invalid credentials");
   },
 
   createOrder: async (orderData) => {
