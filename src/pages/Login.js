@@ -719,30 +719,7 @@ function LoginView({onLogin}){
               {role!=="client"&&<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}><label style={{display:"flex",alignItems:"center",gap:8,cursor:"pointer"}} onClick={()=>setRemember(r=>!r)}><div style={{width:18,height:18,borderRadius:5,border:`2px solid ${remember?"#00c6e0":"rgba(255,255,255,.2)"}`,background:remember?"#00c6e0":"transparent",display:"flex",alignItems:"center",justifyContent:"center",transition:"all .2s"}}>{remember&&<Icon.Check/>}</div><span style={{color:"rgba(255,255,255,.45)",fontSize:13}}>Remember me</span></label><button type="button" onClick={()=>{setForgot(true);setErrors({});}} style={{background:"transparent",border:"none",color:"#00c6e0",fontSize:13,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:600}}>Forgot password?</button></div>}
               <SubmitBtn loading={loading} label="Sign In" type="submit"/>
             </form>
-            {role==="owner"&&<div style={{textAlign:"center",marginTop:16}}><p style={{color:"rgba(255,255,255,.4)",fontSize:13}}>Don't have an account? <button onClick={()=>setForgot("signup")} style={{background:"transparent",border:"none",color:"#00c6e0",fontSize:13,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:600}}>Sign up</button></p></div>}
-          {forgot==="signup"&&<div style={{padding:20,marginTop:16,background:"rgba(0,198,224,.05)",borderRadius:16}}>
-            {!signingUp?<> 
-              <h3 style={{fontFamily:"'Cinzel',serif",color:"#fff",fontSize:18,marginBottom:8,textAlign:"center"}}>Create Owner Account</h3>
-              <p style={{color:"rgba(255,255,255,.4)",fontSize:12,marginBottom:16,textAlign:"center"}}>Sign up to manage your laundry business.</p>
-              <LoginInput icon={<Icon.Mail/>} type="email" placeholder="Your email" value={email} error={errors.email} onChange={e=>{setEmail(e.target.value);setErrors(p=>({...p,email:""}));}}/>
-              <LoginInput icon={<Icon.Lock/>} type={show?"text":"password"} placeholder="Password (min 6 chars)" value={pwd} error={errors.pwd} onChange={e=>{setPwd(e.target.value);setErrors(p=>({...p,pwd:""}));}}/>
-              {errors.general&&<p style={{color:"#fca5a5",fontSize:12,marginBottom:12}}>{errors.general}</p>}
-              <SubmitBtn loading={loading} label="Sign Up" onClick={async()=>{
-                if(!email.trim()||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){setErrors({email:"Valid email required."});return;}
-                if(!pwd.trim()||pwd.length<6){setErrors({pwd:"At least 6 characters."});return;}
-                setLoading(true);
-                try{const staffList=loadStaff();if(staffList.some(s=>s.email.toLowerCase()===email.toLowerCase())){setLoading(false);setErrors({email:"Email already registered"});return;}
-                  const newStaff={id:Date.now().toString(),name:"Owner",email,pwd,role:"owner",active:true,createdAt:new Date().toISOString()};staffList.push(newStaff);saveStaff(staffList);setSigningUp(true);}catch(err){setLoading(false);setErrors({general:err.message||"Signup failed."});}
-              }}/>
-              <button onClick={()=>{setForgot(false);setEmail("");setPwd("");setErrors({});}} style={{width:"100%",marginTop:12,padding:"12px",borderRadius:12,background:"transparent",color:"rgba(255,255,255,.4)",border:"none",fontSize:14,cursor:"pointer"}}>Cancel</button>
-            </>
-            :<div style={{textAlign:"center",padding:20}}>
-              <div style={{width:48,height:48,borderRadius:"50%",background:"rgba(16,185,129,.15)",border:"2px solid #10b981",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 12px"}}><span style={{color:"#10b981",fontSize:24}}>✓</span></div>
-              <h3 style={{color:"#fff",fontSize:16,marginBottom:8}}>Account Created!</h3>
-              <p style={{color:"rgba(255,255,255,.4)",fontSize:12,marginBottom:16}}>You can now sign in.</p>
-              <button onClick={()=>{setForgot(false);setSigningUp(false);setEmail("");setPwd("");}} style={{padding:"12px 24px",borderRadius:12,background:"linear-gradient(135deg,#0077b6,#00c6e0)",color:"#fff",border:"none",fontWeight:700,fontSize:14,cursor:"pointer"}}>Go to Login</button>
-            </div>}
-          </div>}
+            {role==="owner"&&<div style={{textAlign:"center",marginTop:16}}><button onClick={async()=>{const staff=loadStaff();if(staff.some(s=>s.role==="owner")){alert("Owner account already exists. Use Forgot Password?");return;}const newStaff={id:Date.now().toString(),name:"Owner",email:"owner@demo.com",pwd:"owner123",role:"owner",active:true,createdAt:new Date().toISOString()};staff.push(newStaff);saveStaff(staff);alert("Owner account created! Email: owner@demo.com Password: owner123");}} style={{background:"transparent",border:"none",color:"#00c6e0",fontSize:13,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:600}}>Create Owner Account</button></div>}
             {/* Demo credentials section */}
             <div style={{marginTop:18,padding:"13px 16px",borderRadius:12,background:"rgba(0,198,224,.05)",border:"1px solid rgba(0,198,224,.1)"}}>
               {role==="client"&&<>
