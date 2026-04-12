@@ -711,12 +711,12 @@ function LoginView({onLogin}){
                   setLoading(true);
                   try{await adminAPI.signup(email,pwd);setSigningUp(true);}catch(err){setLoading(false);setErrors({general:err.message||"Signup failed."});}
                 }}/>
-                <button onClick={()=>{setForgot(false);setSignup(false);setEmail("");setPwd("");setErrors({});}} style={{width:"100%",marginTop:12,padding:"12px",borderRadius:12,background:"transparent",color:"rgba(255,255,255,.4)",border:"none",fontSize:14,cursor:"pointer"}}>Cancel</button>
+                <button onClick={()=>{setForgot(false);setEmail("");setPwd("");setErrors({});}} style={{width:"100%",marginTop:12,padding:"12px",borderRadius:12,background:"transparent",color:"rgba(255,255,255,.4)",border:"none",fontSize:14,cursor:"pointer"}}>Cancel</button>
               </>:<div style={{textAlign:"center",padding:"20px 0"}}>
                 <div style={{width:64,height:64,borderRadius:"50%",background:"rgba(16,185,129,.15)",border:"2px solid #10b981",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 16px"}}><span style={{color:"#10b981",fontSize:28}}>✓</span></div>
                 <h3 style={{fontFamily:"'Cinzel',serif",color:"#fff",fontSize:18,marginBottom:8}}>Account Created!</h3>
                 <p style={{color:"rgba(255,255,255,.45)",fontSize:13,marginBottom:24}}>You can now sign in with your credentials.</p>
-                <button onClick={()=>{setForgot(false);setSignup(false);setSigningUp(false);setEmail("");setPwd("");}} style={{width:"100%",padding:"14px",borderRadius:12,background:"linear-gradient(135deg,#0077b6,#00c6e0)",color:"#fff",border:"none",fontWeight:700,fontSize:15,fontFamily:"'DM Sans',sans-serif",cursor:"pointer"}}>Go to Login</button>
+                <button onClick={()=>{setForgot(false);setSigningUp(false);setEmail("");setPwd("");}} style={{width:"100%",padding:"14px",borderRadius:12,background:"linear-gradient(135deg,#0077b6,#00c6e0)",color:"#fff",border:"none",fontWeight:700,fontSize:15,fontFamily:"'DM Sans',sans-serif",cursor:"pointer"}}>Go to Login</button>
               </div>}
             </div>:forgot?<ForgotPassword onBack={()=>setForgot(false)}/>:<>
             <div style={{marginBottom:24}}>
