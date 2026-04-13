@@ -1,7 +1,6 @@
 /* eslint-disable jsx-a11y/label-has-associated-control, no-unused-vars */
 import { useState, useEffect, useRef } from "react";
-import { adminAPI, userAPI, setupAPI } from "../utils/api";
-import { auth, sendPasswordResetEmail } from "../firebase";
+import { adminAPI, userAPI, setupAPI, loadStaff, saveStaff } from "../utils/api";
 import AdminSetup from "./AdminSetup";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
