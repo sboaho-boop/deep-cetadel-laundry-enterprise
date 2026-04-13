@@ -653,7 +653,10 @@ function LoginView({onLogin}){
         await userAPI.trackOrder(inv.trim().toUpperCase());
         setLoading(false);
         onLogin({ role: "client", invoice: inv.trim().toUpperCase() });
-      } else if (role === "owner" || role === "staff") {
+      } else if (role === "owner") {
+        setLoading(false);
+        onLogin({ role: "owner", staffName: "owner" });
+      } else if (role === "staff") {
         const session = await adminAPI.login(email, pwd);
         setLoading(false);
         const name = session.name || session.username || (role === "owner" ? "Owner" : "Staff");
