@@ -50,8 +50,6 @@ const DEFAULT_META = {
 const loadOrders  = () => { try { return JSON.parse(localStorage.getItem(ORDERS_KEY)||"[]"); } catch { return []; } };
 const saveOrders  = (orders) => localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
 const loadPrices  = () => { try { const s=localStorage.getItem(PRICE_KEY); return s?JSON.parse(s):DEFAULT_PRICES; } catch { return DEFAULT_PRICES; } };
-const loadStaff   = () => { try { const stored=JSON.parse(localStorage.getItem(STAFF_KEY)||"[]"); if(stored.length)return stored; return[{id:"1",name:"Owner",email:"owner@demo.com",password:"owner123",role:"owner",active:true}]; } catch { return[]; } };
-const saveStaff   = (staff) => localStorage.setItem(STAFF_KEY, JSON.stringify(staff));
 
 // ── Sound Engine (Web Audio API — no external deps) ──────────────────────────
 const AudioCtx = { ctx: null };
