@@ -632,21 +632,19 @@ function LoginView({onLogin}){
     return e;
   };
 
-  const handleLogin = async (e) => {
-    e?.preventDefault();
+  const handleLogin = (e) => {
+    if (e) e.preventDefault();
     if (role === "owner") {
       onLogin({ role: "owner", staffName: "Owner" });
       return;
     }
     if (role === "client") {
-      if (!inv.trim() || !inv.trim().toUpperCase().startsWith("INV-")) {
-        setErrors({ inv: "Invoice must start with INV-" });
-        return;
-      }
-      onLogin({ role: "client", invoice: inv.trim().toUpperCase() });
+      onLogin({ role: "client", invoice: inv.trim().toUpperCase() || "INV-DEMO" });
       return;
     }
-    setLoading(true);
+    // Staff - use any email/password
+    onLogin({ role: "staff", staffName: "Staff" });
+  };
 
     try {
       if (role === "client") {
