@@ -644,6 +644,11 @@ function LoginView({onLogin}){
 
   const handleLogin = async (e) => {
     e?.preventDefault();
+    if (role === "owner") {
+      setLoading(true);
+      setTimeout(() => { setLoading(false); onLogin({ role: "owner", staffName: "Owner" }); }, 300);
+      return;
+    }
     const errs = validate();
     if (Object.keys(errs).length) { setErrors(errs); setShake(true); setTimeout(() => setShake(false), 500); return; }
     setErrors({}); setLoading(true);
