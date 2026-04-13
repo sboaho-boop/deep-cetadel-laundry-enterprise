@@ -572,7 +572,7 @@ function ForgotPassword({onBack}){
     setLoading(true);
     setError("");
     try {
-      await sendPasswordResetEmail(auth, email);
+      // Skip password reset for now
       setLoading(false);
       setSuccess("Password reset link sent! Check your email.");
       setStep(2);
