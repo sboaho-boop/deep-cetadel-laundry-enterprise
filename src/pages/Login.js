@@ -635,13 +635,18 @@ function LoginView({onLogin}){
   const handleLogin = async (e) => {
     e?.preventDefault();
     if (role === "owner") {
-      setLoading(true);
-      setTimeout(() => { setLoading(false); onLogin({ role: "owner", staffName: "Owner" }); }, 300);
+      onLogin({ role: "owner", staffName: "Owner" });
       return;
     }
-    const errs = validate();
-    if (Object.keys(errs).length) { setErrors(errs); setShake(true); setTimeout(() => setShake(false), 500); return; }
-    setErrors({}); setLoading(true);
+    if (role === "client") {
+      if (!inv.trim() || !inv.trim().toUpperCase().startsWith("INV-")) {
+        setErrors({ inv: "Invoice must start with INV-" });
+        return;
+      }
+      onLogin({ role: "client", invoice: inv.trim().toUpperCase() });
+      return;
+    }
+    setLoading(true);
 
     try {
       if (role === "client") {
