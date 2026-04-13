@@ -616,19 +616,9 @@ function ForgotPassword({onBack}){
 function LoginView({onLogin}){
   const [role,setRole]=useState("client"),[email,setEmail]=useState(""),[pwd,setPwd]=useState(""),[inv,setInv]=useState(""),[show,setShow]=useState(false),[remember,setRemember]=useState(false),[loading,setLoading]=useState(false),[errors,setErrors]=useState({}),[shake,setShake]=useState(false),[forgot,setForgot]=useState(false),[loaded,setLoaded]=useState(false),[needsSetup,setNeedsSetup]=useState(undefined),[signingUp,setSigningUp]=useState(false);
   
-  // Check if admin exists on mount - only once
+  // Check if admin exists on mount - always show login (skip setup)
   useEffect(()=>{
-    let cancelled = false;
-    const checkAdmin = async () => {
-      try {
-        const result = await setupAPI.checkAdmin();
-        if (!cancelled) setNeedsSetup(!result.has_admin);
-      } catch (err) {
-        if (!cancelled) setNeedsSetup(true);
-      }
-    };
-    checkAdmin();
-    return () => { cancelled = true; };
+    setNeedsSetup(false);
   },[]);
   
   useEffect(()=>{setTimeout(()=>setLoaded(true),100);},[]);
