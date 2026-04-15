@@ -646,31 +646,6 @@ function LoginView({onLogin}){
     onLogin({ role: "staff", staffName: "Staff" });
   };
 
-    try {
-      if (role === "client") {
-        await userAPI.trackOrder(inv.trim().toUpperCase());
-        setLoading(false);
-        onLogin({ role: "client", invoice: inv.trim().toUpperCase() });
-      } else if (role === "owner") {
-        setLoading(false);
-        onLogin({ role: "owner", staffName: "owner" });
-      } else if (role === "staff") {
-        const session = await adminAPI.login(email, pwd);
-        setLoading(false);
-        const name = session.name || session.username || (role === "owner" ? "Owner" : "Staff");
-        onLogin({ role: role, staffName: name });
-      }
-    } catch (err) {
-      setLoading(false);
-      setErrors({ general: err.message || "Invalid credentials." });
-      setShake(true);
-      setTimeout(() => setShake(false), 500);
-    }
-  };
-
-  // Remove demo data loading - use API only
-  // useEffect(()=>{...},[]);
-
   const staffList = loadStaff();
 
   // Show loading while checking admin
