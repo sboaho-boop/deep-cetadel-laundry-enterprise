@@ -635,7 +635,11 @@ function LoginView({onLogin}){
   const handleLogin = (e) => {
     if (e) e.preventDefault();
     if (role === "owner") {
-      onLogin({ role: "owner", staffName: "Owner" });
+      if (email === "owner@deepcitadel.com" && pwd === "owner123") {
+        onLogin({ role: "owner", staffName: "Owner" });
+        return;
+      }
+      setErrors({ general: "Invalid owner credentials" });
       return;
     }
     if (role === "client") {
