@@ -1242,21 +1242,7 @@ function LoginView({onLogin}){
 
   const ar = ROLES.find(r=>r.key===role);
 
-  const validate=()=>{
-    const e={};
-    if(role==="client"){
-      if(!inv.trim()) e.inv="Invoice number required.";
-      else if(!inv.trim().toUpperCase().startsWith("INV-")) e.inv="Must start with INV-";
-    } else {
-      if(!email.trim()) e.email="Email required.";
-      else if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) e.email="Invalid email.";
-      if(!pwd.trim()) e.pwd="Password required.";
-      else if(pwd.length<6) e.pwd="At least 6 chars.";
-    }
-    return e;
-  };
-
-  const handleLogin = async (e) => {
+  const handleLogin = (e) => {
     e?.preventDefault();
     if (role === "client") {
       onLogin({ role: "client", invoice: inv.trim().toUpperCase() || "INV-DEMO" });
