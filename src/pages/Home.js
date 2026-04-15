@@ -33,6 +33,7 @@ const PAYMENT_METHODS = [
   { key:"cash",   label:"Cash",         icon:"💵", color:"#10b981" },
   { key:"momo",   label:"Mobile Money", icon:"📱", color:"#f59e0b" },
   { key:"card",   label:"Card",         icon:"💳", color:"#818cf8" },
+  { key:"ussd",   label:"USSD (*447#)", icon:"📞", color:"#10b981" },
 ];
 
 const DEFAULT_PRICES = {
@@ -1141,15 +1142,55 @@ function PickupPaymentModal({ onClose }) {
           </>}
 
           {/* Info banner */}
-          <div style={{background: method === "momo" ? "rgba(245,158,11,.07)" : "rgba(245,158,11,.07)",border:"1px solid rgba(245,158,11,.2)",borderRadius:12,padding:"12px 14px",marginBottom:20}}>
+          <div style={{background: method === "momo" || method === "ussd" ? "rgba(245,158,11,.07)" : "rgba(245,158,11,.07)",border:"1px solid rgba(245,158,11,.2)",borderRadius:12,padding:"12px 14px",marginBottom:20}}>
             <div style={{fontSize:12,color:"rgba(255,215,100,.7)",lineHeight:1.6}}>
               {method === "momo" ? (
                 <>📱 After sending payment via MoMo, click <strong style={{color:"#f59e0b"}}>Submit Payment</strong> to notify us. Your payment will be <strong style={{color:"#f59e0b"}}>confirmed within 5 minutes</strong>.</>
+              ) : method === "ussd" ? (
+                <><strong style={{color:"#10b981"}}>📞</strong> After completing USSD payment, click <strong style={{color:"#f59e0b"}}>Submit Payment</strong> to notify us. Payment will be <strong style={{color:"#f59e0b"}}>confirmed within 5 minutes</strong>.</>
               ) : (
                 <>⏱️ After submitting, your payment will be <strong style={{color:"#f59e0b"}}>confirmed within 5 minutes</strong> by our team. You'll see a confirmation status on your tracking page.</>
               )}
             </div>
           </div>
+
+          {/* USSD Payment Instructions */}
+          {method === "ussd" && (
+            <div style={{background:"rgba(16,185,129,.06)",border:"1px solid rgba(16,185,129,.2)",borderRadius:14,padding:"16px",marginBottom:18}}>
+              <div style={{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:13,color:"#10b981",marginBottom:12,display:"flex",alignItems:"center",gap:8}}>
+                <span style={{fontSize:18}}>📞</span> USSD Payment — All Networks
+              </div>
+              
+              {/* Invoice Reference */}
+              <div style={{background:"rgba(239,68,68,.15)",border:"2px solid #ef4444",borderRadius:12,padding:"14px",marginBottom:14}}>
+                <div style={{fontSize:12,fontWeight:700,color:"#fca5a5",textTransform:"uppercase",letterSpacing:1,marginBottom:8,display:"flex",alignItems:"center",gap:6}}>
+                  <span style={{fontSize:16}}>⚠️</span> IMPORTANT — Use Invoice as Payment Reference
+                </div>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",background:"rgba(0,0,0,.4)",borderRadius:8,padding:"12px 14px"}}>
+                  <div>
+                    <div style={{fontSize:11,color:"rgba(255,255,255,.5)",marginBottom:4}}>Your Payment Reference:</div>
+                    <div style={{fontSize:20,color:"#fff",fontFamily:"monospace",fontWeight:800,letterSpacing:1}}>{order?.invoiceNumber}</div>
+                  </div>
+                  <button onClick={()=>navigator.clipboard?.writeText(order?.invoiceNumber)} style={{padding:"8px 16px",borderRadius:8,border:"1px solid rgba(255,255,255,.2)",background:"rgba(255,255,255,.1)",color:"#fff",fontSize:12,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:600}}>📋 Copy</button>
+                </div>
+              </div>
+
+              {/* How to Pay */}
+              <div style={{background:"rgba(0,0,0,.2)",borderRadius:10,padding:"12px 14px"}}>
+                <div style={{fontSize:11,fontWeight:700,color:"#00c6e0",textTransform:"uppercase",letterSpacing:1,marginBottom:10}}>How to Pay (All Networks)</div>
+                <div style={{fontSize:12,color:"rgba(255,255,255,.6)",lineHeight:1.8}}>
+                  <div style={{marginBottom:8}}><strong style={{color:"#10b981"}}>MTN:</strong> Dial <strong style={{color:"#fff"}}>*447#</strong></div>
+                  <div style={{marginBottom:8}}><strong style={{color:"#10b981"}}>AirtelTigo:</strong> Dial <strong style={{color:"#fff"}}>*447#</strong></div>
+                  <div style={{marginBottom:8}}><strong style={{color:"#10b981"}}>Vodafone:</strong> Dial <strong style={{color:"#fff"}}>*447#</strong></div>
+                  <div style={{marginTop:12,background:"rgba(16,185,129,.1)",padding:10,borderRadius:8}}>
+                    <div style={{fontSize:11,color:"rgba(255,255,255,.5)",marginBottom:4}}>When prompted, enter:</div>
+                    <div style={{fontSize:16,color:"#fff",fontFamily:"monospace",fontWeight:700}}>Merchant ID: 2679</div>
+                    <div style={{fontSize:11,color:"rgba(255,255,255,.4)",marginTop:4}}>Then enter amount and confirm</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div style={{display:"flex",gap:10}}>
             <button onClick={()=>setStep("invoice")} style={{flex:1,padding:"13px",borderRadius:12,border:"1px solid rgba(255,255,255,.1)",background:"rgba(255,255,255,.04)",color:"rgba(255,255,255,.5)",fontFamily:"'Syne',sans-serif",fontWeight:600,fontSize:13,cursor:"pointer"}}>← Back</button>
