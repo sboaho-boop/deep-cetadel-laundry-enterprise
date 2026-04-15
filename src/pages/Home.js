@@ -1260,9 +1260,9 @@ function LoginView({onLogin}){
   const [pwd,setPwd]       = useState("");
   const [inv,setInv]       = useState("");
   const [show,setShow]     = useState(false);
-  const [loading,setLoading]   = useState(false);
+  const [loading]   = useState(false);
   const [errors,setErrors]     = useState({});
-  const [shake,setShake]       = useState(false);
+  const [shake]       = useState(false);
   const [loaded,setLoaded]     = useState(false);
   const [showSchedule,setShowSchedule] = useState(false);
   const [showPayModal,setShowPayModal] = useState(false);
