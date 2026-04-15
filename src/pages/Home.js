@@ -1290,8 +1290,14 @@ function LoginView({onLogin}){
       return;
     }
     if (role === "owner") {
-      onLogin({ role: "owner", staffName: "Owner" });
-      return;
+      if (email === "owner@deepcitadel.com" && pwd === "owner123") {
+        onLogin({ role: "owner", staffName: "Owner" });
+        return;
+      }
+      if (email !== "owner@deepcitadel.com" || pwd !== "owner123") {
+        setErrors({ general: "Invalid owner credentials" });
+        return;
+      }
     }
     onLogin({ role: "staff", staffName: "Staff" });
   };
