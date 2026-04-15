@@ -1258,39 +1258,15 @@ function LoginView({onLogin}){
 
   const handleLogin = async (e) => {
     e?.preventDefault();
-    const errs = validate();
-    if (Object.keys(errs).length) { setErrors(errs); setShake(true); setTimeout(() => setShake(false), 500); return; }
-    setErrors({}); setLoading(true);
-    
-    try {
-      if (role === "client") {
-        await userAPI.trackOrder(inv.trim().toUpperCase());
-        setLoading(false);
-        onLogin({ role: "client", invoice: inv.trim().toUpperCase() });
-      } else if (role === "owner" || role === "staff") {
-        const session = await adminAPI.login(email, pwd);
-        setLoading(false);
-        const name = session.name || session.username || (role === "owner" ? "Owner" : "Staff");
-        onLogin({ role: role, staffName: name });
-      }
-    } catch (err) {
-      console.log("API failed, using localStorage:", err.message);
-      setTimeout(() => {
-        if (role === "client") {
-          const found = loadOrders().find(o => o.invoiceNumber?.toUpperCase() === inv.trim().toUpperCase());
-          if (found) onLogin({ role: "client", invoice: inv.trim().toUpperCase() });
-          else { setLoading(false); setErrors({ general: "Invoice not found." }); setShake(true); setTimeout(() => setShake(false), 500); }
-        } else if (role === "owner") {
-          const found = loadStaff().find(s => s.email.toLowerCase() === email.toLowerCase() && (s.password === pwd || s.pwd === pwd) && s.role === "owner" && s.active !== false);
-          if (found) onLogin({ role: "owner", staffName: found.name });
-          else { setLoading(false); setErrors({ general: "Invalid credentials." }); setShake(true); setTimeout(() => setShake(false), 500); }
-        } else if (role === "staff") {
-          const found = loadStaff().find(s => s.email.toLowerCase() === email.toLowerCase() && s.password === pwd && s.active !== false);
-          if (found) onLogin({ role: "staff", staffName: found.name });
-          else { setLoading(false); setErrors({ general: "Invalid credentials." }); setShake(true); setTimeout(() => setShake(false), 500); }
-        }
-      }, 300);
+    if (role === "client") {
+      onLogin({ role: "client", invoice: inv.trim().toUpperCase() || "INV-DEMO" });
+      return;
     }
+    if (role === "owner") {
+      onLogin({ role: "owner", staffName: "Owner" });
+      return;
+    }
+    onLogin({ role: "staff", staffName: "Staff" });
   };
 
   // ── Landing page data ────────────────────────────────────────────────────
