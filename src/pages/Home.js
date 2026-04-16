@@ -33,7 +33,7 @@ const PAYMENT_METHODS = [
   { key:"cash",   label:"Cash",         icon:"💵", color:"#10b981" },
   { key:"momo",   label:"Mobile Money", icon:"📱", color:"#f59e0b" },
   { key:"card",   label:"Card",         icon:"💳", color:"#818cf8" },
-  { key:"ussd",   label:"USSD (*447#)", icon:"📞", color:"#10b981" },
+  { key:"ussd",   label:"USSD (*447*2679#)", icon:"📞", color:"#10b981" },
 ];
 
 const DEFAULT_PRICES = {
@@ -1177,14 +1177,12 @@ function PickupPaymentModal({ onClose }) {
 
               {/* How to Pay */}
               <div style={{background:"rgba(0,0,0,.2)",borderRadius:10,padding:"12px 14px"}}>
-                <div style={{fontSize:11,fontWeight:700,color:"#00c6e0",textTransform:"uppercase",letterSpacing:1,marginBottom:10}}>How to Pay (All Networks)</div>
+                <div style={{fontSize:11,fontWeight:700,color:"#00c6e0",textTransform:"uppercase",letterSpacing:1,marginBottom:10}}>How to Pay — All Networks</div>
                 <div style={{fontSize:12,color:"rgba(255,255,255,.6)",lineHeight:1.8}}>
-                  <div style={{marginBottom:8}}><strong style={{color:"#10b981"}}>MTN:</strong> Dial <strong style={{color:"#fff"}}>*447#</strong></div>
-                  <div style={{marginBottom:8}}><strong style={{color:"#10b981"}}>AirtelTigo:</strong> Dial <strong style={{color:"#fff"}}>*447#</strong></div>
-                  <div style={{marginBottom:8}}><strong style={{color:"#10b981"}}>Vodafone:</strong> Dial <strong style={{color:"#fff"}}>*447#</strong></div>
+                  <div style={{marginBottom:8}}><strong style={{color:"#10b981"}}>MTN / AirtelTigo / Vodafone:</strong> Dial <strong style={{color:"#fff",fontSize:14}}>*447*2679#</strong></div>
                   <div style={{marginTop:12,background:"rgba(16,185,129,.1)",padding:10,borderRadius:8}}>
-                    <div style={{fontSize:11,color:"rgba(255,255,255,.5)",marginBottom:4}}>When prompted, enter:</div>
-                    <div style={{fontSize:16,color:"#fff",fontFamily:"monospace",fontWeight:700}}>Merchant ID: 2679</div>
+                    <div style={{fontSize:11,color:"rgba(255,255,255,.5)",marginBottom:4}}>Merchant Name:</div>
+                    <div style={{fontSize:16,color:"#fff",fontFamily:"monospace",fontWeight:700}}>Deep Citadel Enterprise</div>
                     <div style={{fontSize:11,color:"rgba(255,255,255,.4)",marginTop:4}}>Then enter amount and confirm</div>
                   </div>
                 </div>
