@@ -3,8 +3,10 @@ import {
   FaTrash, FaCheck, 
   FaFileInvoice, FaHistory, FaUser, FaPhoneAlt, FaMapMarkerAlt, FaTruck 
 } from "react-icons/fa";
+import { userAPI } from "../utils/api";
 const fmt = n => `₵${Number(n).toFixed(2)}`;
 const uid = () => "INV-" + Date.now().toString().slice(-6);
+const ORDERS_KEY = "dcl_orders";
 
 const C = {
   blue: "#0077b6",
@@ -37,15 +39,40 @@ export default function LaundryPOS() {
   const subtotal = services.reduce((acc, s) => acc + (selections[s.name] || 0) * s.price, 0);
   const total = subtotal + deliveryFee;
 
-  const handleCheckout = (e) => {
+  const handleCheckout = async (e) => {
     e.preventDefault();
     if (!customer.name || subtotal === 0) return alert("Details missing!");
+    
+    const invoiceNumber = uid();
     const newOrder = {
-      id: uid(), customer: customer.name, phone: customer.phone,
-      date: new Date().toLocaleString(), items: services.filter(s => selections[s.name] > 0).map(s => ({ ...s, count: selections[s.name] })),
-      deliveryFee, pickupFrom: customer.pickupFrom, deliverTo: customer.deliverTo, total, paid: false
+      id: invoiceNumber,
+      invoiceNumber: invoiceNumber,
+      customer: { name: customer.name.trim(), phone: customer.phone.trim() },
+      items: services.filter(s => selections[s.name] > 0).map(s => ({ name: s.name, qty: selections[s.name], unitPrice: s.price, subtotal: selections[s.name] * s.price })),
+      total: total,
+      deliveryFee: deliveryFee,
+      orderType: orderType,
+      pickupFrom: customer.pickupFrom,
+      deliverTo: customer.deliverTo,
+      stage: orderType === "pickup" ? "PICKUP_SCHEDULED" : "RECEIVED",
+      paymentStatus: "pending",
+      paid: false,
+      createdAt: new Date().toISOString(),
+      createdBy: "Customer Portal"
     };
-    setOrders([newOrder, ...orders]);
+    
+    // Save to localStorage (same format as Home.js)
+    const updated = [newOrder, ...orders];
+    localStorage.setItem(ORDERS_KEY, JSON.stringify(updated));
+    setOrders(updated);
+    
+    // Also save to Firebase
+    try {
+      await userAPI.createOrder(newOrder);
+    } catch (err) {
+      console.log("Firebase save failed:", err);
+    }
+    
     setSelections({}); setCustomer({ name: "", phone: "", pickupFrom: "", deliverTo: "" });
     setOrderType("walkin"); setActiveTab("history");
   };
