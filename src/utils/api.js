@@ -1,10 +1,7 @@
 /* eslint-disable no-unused-vars, import/no-anonymous-default-export */
-// eslint-disable-next-line no-unused-vars
 import { db, auth, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, orderBy, onSnapshot, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, collection, getDoc, sendPasswordResetEmail } from "../firebase";
 
-const USE_API = false;
-
-// ── Local Storage Helpers ─────────────────────────────────────────────
+// ── Local Storage Helpers (fallback) ─────────────────────────────────
 const LS_KEYS = {
   ORDERS: "dcl_orders",
   STAFF: "dcl_staff", 
@@ -12,14 +9,48 @@ const LS_KEYS = {
   META: "dcl_meta"
 };
 
+// Load orders - try Firebase first, fallback to localStorage
 export const loadOrders = () => JSON.parse(localStorage.getItem(LS_KEYS.ORDERS) || "[]");
-export const saveOrders = (orders) => localStorage.setItem(LS_KEYS.ORDERS, JSON.stringify(orders));
+export const saveOrders = async (orders) => {
+  localStorage.setItem(LS_KEYS.ORDERS, JSON.stringify(orders));
+  // Also save to Firebase
+  try {
+    const batch = orders.map(o => addDoc(collection(db, "orders"), { ...o, updatedAt: new Date().toISOString() }));
+    await Promise.all(batch);
+  } catch (e) {
+    console.log("Firebase orders sync error:", e);
+  }
+};
+
 export const loadStaff = () => {
   const stored = localStorage.getItem(LS_KEYS.STAFF);
-  if (stored) return JSON.parse(stored);
-  return [{ id: "1", name: "Owner", email: "owner@demo.com", password: "owner123", role: "owner", active: true, createdAt: new Date().toISOString() }];
+  if (stored) {
+    const staff = JSON.parse(stored);
+    // Ensure owner exists with correct credentials
+    if (!staff.some(s => s.email === "owner@deepcitadel.com")) {
+      staff.push({ id: "owner1", name: "Owner", email: "owner@deepcitadel.com", password: "owner123", role: "owner", active: true, createdAt: new Date().toISOString() });
+      localStorage.setItem(LS_KEYS.STAFF, JSON.stringify(staff));
+    }
+    return staff;
+  }
+  const defaultStaff = [{ id: "owner1", name: "Owner", email: "owner@deepcitadel.com", password: "owner123", role: "owner", active: true, createdAt: new Date().toISOString() }];
+  localStorage.setItem(LS_KEYS.STAFF, JSON.stringify(defaultStaff));
+  return defaultStaff;
 };
-export const saveStaff = (staff) => localStorage.setItem(LS_KEYS.STAFF, JSON.stringify(staff));
+export const saveStaff = async (staff) => {
+  localStorage.setItem(LS_KEYS.STAFF, JSON.stringify(staff));
+  // Save to Firebase
+  try {
+    // Clear and re-add
+    const existing = await getDocs(collection(db, "staff"));
+    const deletePromises = existing.docs.map(d => deleteDoc(doc(db, "staff", d.id)));
+    await Promise.all(deletePromises);
+    const addPromises = staff.map(s => addDoc(collection(db, "staff"), s));
+    await Promise.all(addPromises);
+  } catch (e) {
+    console.log("Firebase staff sync error:", e);
+  }
+};
 export const loadServices = () => JSON.parse(localStorage.getItem(LS_KEYS.SERVICES) || "[]");
 export const saveServices = (services) => localStorage.setItem(LS_KEYS.SERVICES, JSON.stringify(services));
 export const loadMeta = () => JSON.parse(localStorage.getItem(LS_KEYS.META) || "{}");
@@ -27,26 +58,28 @@ export const saveMeta = (meta) => localStorage.setItem(LS_KEYS.META, JSON.string
 
 // ── Setup API ────────────────────────────────────────────────────────
 export const setupAPI = {
-  // Check if admin exists
   checkAdmin: async () => {
     try {
-      const staff = loadStaff();
+      const snapshot = await getDocs(collection(db, "staff"));
+      const staff = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
       const hasOwner = staff.some(s => s.role === "owner");
       return { has_owner: hasOwner };
     } catch (e) {
-      return { has_owner: false };
+      const localStaff = loadStaff();
+      const hasOwner = localStaff.some(s => s.role === "owner");
+      return { has_owner: hasOwner };
     }
   },
 
-  // Create admin/owner
   createAdmin: async (data) => {
     try {
-      await adminAPI.createStaff({
+      await addDoc(collection(db, "staff"), {
         name: data.username,
         email: data.email,
         password: data.password,
         role: "owner",
-        active: true
+        active: true,
+        createdAt: new Date().toISOString()
       });
       return { success: true };
     } catch (e) {
@@ -54,17 +87,11 @@ export const setupAPI = {
     }
   },
 
-  // Create staff member
-  createStaff: async (staffData) => {
-    return adminAPI.createStaff(staffData);
-  },
-
   getServices: async () => {
     try {
       const snapshot = await getDocs(collection(db, "services"));
       return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     } catch (e) {
-      console.log("Firebase error:", e);
       return loadServices();
     }
   },
@@ -91,10 +118,43 @@ export const setupAPI = {
 // ── Admin API ────────────────────────────────────────────────────────
 export const adminAPI = {
   login: async (email, password) => {
-    // Only use localStorage (no Firebase)
-    const staff = loadStaff().find(s => s.email.toLowerCase() === email.toLowerCase() && s.password === password && s.active !== false);
-    if (staff) return { success: true, user: { email: staff.email, name: staff.name } };
-    throw new Error("Invalid credentials");
+    // Check Firebase Auth first
+    try {
+      const result = await signInWithEmailAndPassword(auth, email, password);
+      return { success: true, user: { email: result.user.email, name: result.user.displayName || "Owner" } };
+    } catch (authError) {
+      // Fallback to localStorage for demo accounts
+      const staff = loadStaff().find(s => s.email.toLowerCase() === email.toLowerCase() && s.password === password && s.active !== false);
+      if (staff) return { success: true, user: { email: staff.email, name: staff.name } };
+      throw new Error("Invalid credentials");
+    }
+  },
+
+  signup: async (email, password, name) => {
+    try {
+      const result = await createUserWithEmailAndPassword(auth, email, password);
+      await addDoc(collection(db, "staff"), {
+        email,
+        name: name || "Owner",
+        role: "owner",
+        active: true,
+        createdAt: new Date().toISOString()
+      });
+      return { success: true, user: result.user };
+    } catch (error) {
+      if (error.code === "auth/email-already-in-use") {
+        throw new Error("Email already registered");
+      }
+      throw new Error(error.message);
+    }
+  },
+
+  logout: async () => {
+    try {
+      await signOut(auth);
+    } catch (e) {
+      console.log("Logout error:", e);
+    }
   },
 
   createOrder: async (orderData) => {
@@ -136,23 +196,6 @@ export const adminAPI = {
       staff.push({ ...staffData, id: Date.now().toString(), createdAt: new Date().toISOString() });
       saveStaff(staff);
       return { success: true };
-    }
-  },
-
-  signup: async (email, password) => {
-    try {
-      const result = await createUserWithEmailAndPassword(auth, email, password);
-      const staff = loadStaff();
-      const newStaff = { name: "Owner", email, password, role: "owner", active: true, id: result.user.id, createdAt: new Date().toISOString() };
-      staff.push(newStaff);
-      saveStaff(staff);
-      await addDoc(collection(db, "staff"), newStaff);
-      return { success: true, user: result.user };
-    } catch (error) {
-      if (error.code === "auth/email-already-in-use") {
-        throw new Error("Email already registered");
-      }
-      throw new Error(error.message);
     }
   },
 
