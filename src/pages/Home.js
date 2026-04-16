@@ -298,8 +298,8 @@ function PaymentModal({ order, onClose, onPaid }) {
   };
 
   return (
-    <div style={{ position:"fixed",inset:0,zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,.75)",backdropFilter:"blur(8px)",padding:16 }}>
-      <div style={{ background:"rgba(5,18,40,.98)",border:"1px solid rgba(0,198,224,.25)",borderRadius:24,padding:32,width:"100%",maxWidth:460,boxShadow:"0 24px 70px rgba(0,0,0,.8)",animation:"popIn .25s ease" }}>
+    <div style={{ position:"fixed",inset:0,zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,.75)",backdropFilter:"blur(8px)",padding:16,overflowY:"auto" }}>
+      <div style={{ background:"rgba(5,18,40,.98)",border:"1px solid rgba(0,198,224,.25)",borderRadius:24,padding:24,width:"100%",maxWidth:460,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 24px 70px rgba(0,0,0,.8)",animation:"popIn .25s ease",margin:"auto" }}>
         {!done ? <>
           <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:24 }}>
             <div>
@@ -973,8 +973,8 @@ function PickupPaymentModal({ onClose }) {
   const isPickup = order && isPickupOrder(order);
 
   return (
-    <div style={{position:"fixed",inset:0,zIndex:250,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,.8)",backdropFilter:"blur(10px)",padding:16}}>
-      <div style={{background:"rgba(5,18,40,.99)",border:"1px solid rgba(0,198,224,.25)",borderRadius:24,padding:32,width:"100%",maxWidth:460,boxShadow:"0 24px 70px rgba(0,0,0,.8)",animation:"popIn .25s ease"}}>
+    <div style={{position:"fixed",inset:0,zIndex:250,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,.8)",backdropFilter:"blur(10px)",padding:16,overflowY:"auto"}}>
+      <div style={{background:"rgba(5,18,40,.99)",border:"1px solid rgba(0,198,224,.25)",borderRadius:24,padding:24,width:"100%",maxWidth:460,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 24px 70px rgba(0,0,0,.8)",animation:"popIn .25s ease",margin:"auto"}}>
 
         {/* Step: enter invoice */}
         {step==="invoice"&&<>
