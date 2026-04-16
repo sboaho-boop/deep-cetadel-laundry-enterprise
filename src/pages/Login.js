@@ -643,7 +643,7 @@ function LoginView({onLogin}){
       return;
     }
     if (role === "client") {
-      onLogin({ role: "client", invoice: inv.trim().toUpperCase() || "INV-DEMO" });
+      onLogin({ role: "client", invoice: inv.trim().toUpperCase() });
       return;
     }
     // Staff - use any email/password
@@ -696,37 +696,6 @@ function LoginView({onLogin}){
               {role!=="client"&&<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}><label style={{display:"flex",alignItems:"center",gap:8,cursor:"pointer"}} onClick={()=>setRemember(r=>!r)}><div style={{width:18,height:18,borderRadius:5,border:`2px solid ${remember?"#00c6e0":"rgba(255,255,255,.2)"}`,background:remember?"#00c6e0":"transparent",display:"flex",alignItems:"center",justifyContent:"center",transition:"all .2s"}}>{remember&&<Icon.Check/>}</div><span style={{color:"rgba(255,255,255,.45)",fontSize:13}}>Remember me</span></label><button type="button" onClick={()=>{setForgot(true);setErrors({});}} style={{background:"transparent",border:"none",color:"#00c6e0",fontSize:13,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:600}}>Forgot password?</button></div>}
               <SubmitBtn loading={loading} label="Sign In" type="submit"/>
             </form>
-            {role==="owner"&&<div style={{textAlign:"center",marginTop:16}}><button onClick={async()=>{const staff=loadStaff();if(!staff.some(s=>s.role==="owner")){staff.push({id:"1",name:"Owner",email:"owner@demo.com",password:"owner123",role:"owner",active:true});saveStaff(staff);}onLogin({role:"owner",staffName:"Owner"});}} style={{background:"transparent",border:"none",color:"#00c6e0",fontSize:13,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:600}}>Create Owner Account</button></div>}
-            {/* Demo credentials section */}
-            <div style={{marginTop:18,padding:"13px 16px",borderRadius:12,background:"rgba(0,198,224,.05)",border:"1px solid rgba(0,198,224,.1)"}}>
-              {role==="client"&&<>
-                <p style={{color:"rgba(255,255,255,.35)",fontSize:11,letterSpacing:1,textTransform:"uppercase",marginBottom:8}}>Demo Invoice Numbers</p>
-                <div style={{display:"flex",flexWrap:"wrap",gap:6}}>{["INV-DEMO001","INV-001","INV-002","INV-003"].map(i=><span key={i} onClick={()=>setInv(i)} style={{padding:"3px 10px",borderRadius:20,background:"rgba(0,198,224,.1)",border:"1px solid rgba(0,198,224,.2)",color:"#00c6e0",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"monospace"}}>{i}</span>)}</div>
-                <p style={{color:"rgba(255,255,255,.2)",fontSize:10,marginTop:6}}>INV-002 has a paid receipt demo</p>
-              </>}
-              {role==="staff"&&<>
-                <p style={{color:"rgba(255,255,255,.35)",fontSize:11,letterSpacing:1,textTransform:"uppercase",marginBottom:8}}>Staff Logins</p>
-                {staffList.length===0
-                  ? <p style={{color:"rgba(255,255,255,.25)",fontSize:12,lineHeight:1.5}}>No staff accounts yet. The owner creates staff accounts from the Owner Dashboard → Staff tab.</p>
-                  : <div style={{display:"flex",flexDirection:"column",gap:4}}>
-                      {staffList.filter(s=>s.active!==false).map(s=>(
-                        <div key={s.id} onClick={()=>{setEmail(s.email);setPwd(s.password);}} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"5px 8px",borderRadius:8,background:"rgba(16,185,129,.06)",border:"1px solid rgba(16,185,129,.15)",cursor:"pointer"}} onMouseEnter={e=>e.currentTarget.style.background="rgba(16,185,129,.12)"} onMouseLeave={e=>e.currentTarget.style.background="rgba(16,185,129,.06)"}>
-                          <span style={{color:"#10b981",fontSize:12,fontWeight:700}}>{s.name}</span>
-                          <span style={{color:"rgba(255,255,255,.3)",fontSize:11,fontFamily:"monospace"}}>{s.email.split("@")[0]}</span>
-                        </div>
-                      ))}
-                      <p style={{color:"rgba(255,255,255,.2)",fontSize:10,marginTop:4}}>Click a name to auto-fill credentials</p>
-                    </div>
-                }
-              </>}
-              {role==="owner"&&<>
-                <p style={{color:"rgba(255,255,255,.35)",fontSize:11,letterSpacing:1,textTransform:"uppercase",marginBottom:8}}>Owner Demo Credentials</p>
-                <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
-                  <span style={{color:"#f59e0b",fontSize:11,fontWeight:700}}>Owner</span>
-                  <span style={{color:"rgba(255,255,255,.3)",fontSize:11,fontFamily:"monospace"}}>owner@deepcitadel.com / owner123</span>
-                </div>
-              </>}
-            </div>
         </div>
         <div style={{textAlign:"center",marginTop:20}}>
           <p style={{color:"rgba(255,255,255,.2)",fontSize:12}}>© {new Date().getFullYear()} <span style={{color:"rgba(255,255,255,.35)",fontFamily:"'Cinzel',serif"}}>Deep Citadel</span> · Powerful Clean. Trusted Care.</p>
