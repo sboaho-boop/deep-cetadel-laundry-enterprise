@@ -66,13 +66,23 @@ export default function LaundryPOS() {
     localStorage.setItem(ORDERS_KEY, JSON.stringify(updated));
     setOrders(updated);
     
-    // Also save to Supabase
+    // Also save to Supabase (force using direct fetch)
     try {
+      const supabaseFetchDirect = async (table, method = "GET", body = null) => {
+        const SUPABASE_URL = "https://bxxeuhlgvkqdfmebctgn.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4eGV1aGxndmtxZGZtZWJjdGduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1NDQ5NjgsImV4cCI6MjA5MjEyMDk2OH0.n6Cn7XSOEwVXtlfUc-_iSPXWk8WtQLO3rg57kuki3kY";
+        const options = { method, headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json", "Prefer": method === "POST" ? "return=representation" : "return=minimal" }};
+        if (body) options.body = JSON.stringify(body);
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, options);
+        const text = await res.text();
+        if (!res.ok) throw new Error(text);
+        return text ? JSON.parse(text) : {};
+      };
       console.log("💾 Saving to Supabase:", newOrder.invoiceNumber);
-      const result = await userAPI.createOrder(newOrder);
+      const result = await supabaseFetchDirect("orders", "POST", newOrder);
       console.log("✅ Saved to Supabase:", result);
     } catch (err) {
-      console.log("❌ Supabase save failed:", err);
+      console.log("❌ Supabase save failed:", err.message);
     }
     
     // Broadcast to open owner dashboards
