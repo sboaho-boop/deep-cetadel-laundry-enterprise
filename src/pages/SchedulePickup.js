@@ -3,7 +3,7 @@ import {
   FaTrash, FaCheck, 
   FaFileInvoice, FaHistory, FaUser, FaPhoneAlt, FaMapMarkerAlt, FaTruck 
 } from "react-icons/fa";
-import { userAPI } from "../utils/api";
+// userAPI removed - using direct fetch
 const fmt = n => `₵${Number(n).toFixed(2)}`;
 const uid = () => "INV-" + Date.now().toString().slice(-6);
 const ORDERS_KEY = "dcl_orders";
