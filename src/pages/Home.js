@@ -699,7 +699,7 @@ function SchedulePickupModal({ customer, onClose, onSubmit }) {
     };
     
     try {
-      const result = await userAPI.placeOrder(orderData);
+      const result = await userAPI.createOrder(orderData);
       setLoading(false);
       onSubmit(result.invoice_id || result.invoiceNumber);
     } catch (err) {
