@@ -5,7 +5,8 @@ export default function Navbar() {
     <nav>
       <Link to="/">Home</Link> |{" "}
       <Link to="/login">Login</Link> |{" "}
-      <Link to="/dashboard">Dashboard</Link>
+      <Link to="/schedule">Schedule Pickup</Link> |{" "}
+      <Link to="/track">Track Order</Link>
     </nav>
   );
 }
