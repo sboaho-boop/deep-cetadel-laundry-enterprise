@@ -57,7 +57,14 @@ export const setupAPI = {
 
 export const adminAPI = {
   getOrders: async () => {
-    try { return await supabaseFetch("orders"); } catch (e) { return loadOrders(); }
+    try {
+      const orders = await supabaseFetch("orders");
+      console.log("🔍 Supabase orders fetched:", orders?.length || 0);
+      return orders;
+    } catch (e) {
+      console.log("🔍 Supabase fetch failed:", e.message);
+      return loadOrders();
+    }
   },
   login: async (email, password) => {
     try {
@@ -70,7 +77,12 @@ export const adminAPI = {
     throw new Error("Invalid credentials");
   },
   createOrder: async (orderData) => {
-    try { return await supabaseFetch("orders", "POST", orderData); } catch (e) {
+    try {
+      const result = await supabaseFetch("orders", "POST", orderData);
+      console.log("🔍 Saved to Supabase:", orderData.invoiceNumber);
+      return result;
+    } catch (e) {
+      console.log("🔍 Supabase save failed:", e.message);
       const o = { ...orderData, id: Date.now().toString() };
       const orders = [...loadOrders(), o];
       await saveOrders(orders);
