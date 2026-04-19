@@ -56,6 +56,9 @@ export const setupAPI = {
 };
 
 export const adminAPI = {
+  getOrders: async () => {
+    try { return await supabaseFetch("orders"); } catch (e) { return loadOrders(); }
+  },
   login: async (email, password) => {
     try {
       const staff = await supabaseFetch("staff");

@@ -1937,6 +1937,7 @@ function StaffView({role,onLogout,onBack=null,audioUnlocked=false,staffName=null
   const [cart,setCart]=useState([]);
   const [customer,setCustomer]=useState({name:"",phone:""});
   const [orders,setOrders]=useState(loadOrders);
+  useEffect(()=>{refreshOrders();},[]);
   const [orderFilter, setOrderFilter] = useState("all")
   const [successInv,setSuccessInv]=useState(null);
   const [paymentTarget,setPaymentTarget]=useState(null);
@@ -1960,7 +1961,7 @@ function StaffView({role,onLogout,onBack=null,audioUnlocked=false,staffName=null
     return true;
   });
 
-  const refreshOrders=()=>setOrders(loadOrders());
+  const refreshOrders=async()=>{const local=loadOrders();setOrders(local);try{const remote=await adminAPI.getOrders();if(remote&&remote.length){const merged=[...local];remote.forEach(r=>{if(!merged.some(m=>m.id===r.id||m.invoiceNumber===r.invoiceNumber))merged.unshift(r);});setOrders(merged);}}catch(e){console.log("Refresh error:",e);}};
   const setQty=(service,val)=>{const n=Math.max(0,Math.min(99,isNaN(parseInt(val))?0:parseInt(val)));setQuantities(prev=>({...prev,[service]:n}));};
   const buildOrder=()=>{setCart(Object.entries(quantities).filter(([,q])=>q>0).map(([name,qty])=>({id:`${name}-${Date.now()}`,name,qty,unitPrice:activePrices[name]||0,subtotal:qty*(activePrices[name]||0)})));};
   const removeFromCart=(id)=>{const item=cart.find(i=>i.id===id);if(item)setQty(item.name,0);setCart(prev=>prev.filter(i=>i.id!==id));};
