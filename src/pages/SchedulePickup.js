@@ -68,9 +68,11 @@ export default function LaundryPOS() {
     
     // Also save to Supabase
     try {
-      await userAPI.createOrder(newOrder);
+      console.log("💾 Saving to Supabase:", newOrder.invoiceNumber);
+      const result = await userAPI.createOrder(newOrder);
+      console.log("✅ Saved to Supabase:", result);
     } catch (err) {
-      console.log("Supabase save failed:", err);
+      console.log("❌ Supabase save failed:", err);
     }
     
     // Broadcast to open owner dashboards
