@@ -1937,7 +1937,12 @@ function StaffView({role,onLogout,onBack=null,audioUnlocked=false,staffName=null
   const [cart,setCart]=useState([]);
   const [customer,setCustomer]=useState({name:"",phone:""});
   const [orders,setOrders]=useState(loadOrders);
-  useEffect(()=>{refreshOrders();},[]);
+  useEffect(()=>{
+    refreshOrders();
+    const channel = new BroadcastChannel("dcl_orders");
+    channel.onmessage = (e) => { if(e.data.type==="new_order"){refreshOrders();} };
+    return ()=>channel.close();
+  },[]);
   const [orderFilter, setOrderFilter] = useState("all")
   const [successInv,setSuccessInv]=useState(null);
   const [paymentTarget,setPaymentTarget]=useState(null);

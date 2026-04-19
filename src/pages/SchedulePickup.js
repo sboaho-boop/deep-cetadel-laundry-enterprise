@@ -66,12 +66,19 @@ export default function LaundryPOS() {
     localStorage.setItem(ORDERS_KEY, JSON.stringify(updated));
     setOrders(updated);
     
-    // Also save to Firebase
+    // Also save to Supabase
     try {
       await userAPI.createOrder(newOrder);
     } catch (err) {
-      console.log("Firebase save failed:", err);
+      console.log("Supabase save failed:", err);
     }
+    
+    // Broadcast to open owner dashboards
+    try {
+      const bc = new BroadcastChannel("dcl_orders");
+      bc.postMessage({type:"new_order", order: newOrder});
+      bc.close();
+    } catch(e) {}
     
     setSelections({}); setCustomer({ name: "", phone: "", pickupFrom: "", deliverTo: "" });
     setOrderType("walkin"); setActiveTab("history");
