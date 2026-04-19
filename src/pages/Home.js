@@ -1960,13 +1960,15 @@ function StaffView({role,onLogout,onBack=null,audioUnlocked=false,staffName=null
     return true;
   });
 
-  const refreshOrders=async()=>{const local=loadOrders();console.log("📦 Local orders:", local.length);setOrders(local);try{const remote=await adminAPI.getOrders();console.log("☁️ Remote orders:", remote?.length||0);if(remote&&remote.length){const merged=[...local];remote.forEach(r=>{if(!merged.some(m=>m.id===r.id||m.invoiceNumber===r.invoiceNumber))merged.unshift(r);});setOrders(merged);}}catch(e){console.log("Refresh error:",e.message);}};
+  const refreshOrders=async()=>{const local=loadOrders();setOrders(local);try{const remote=await adminAPI.getOrders();if(remote&&remote.length){const merged=[...local];remote.forEach(r=>{if(!merged.some(m=>m.id===r.id||m.invoiceNumber===r.invoiceNumber))merged.unshift(r);});setOrders(merged);}}catch(e){console.log("Refresh error:",e.message);}};
   useEffect(()=>{
     refreshOrders();
     const channel = new BroadcastChannel("dcl_orders");
     channel.onmessage = (e) => { if(e.data.type==="new_order"){refreshOrders();} };
+    const storageHandler = (e) => { if(e.key==="dcl_orders")refreshOrders(); };
+    window.addEventListener("storage", storageHandler);
     const poll = setInterval(refreshOrders, 3000);
-    return ()=>{channel.close();clearInterval(poll);};
+    return ()=>{channel.close();clearInterval(poll);window.removeEventListener("storage", storageHandler);};
   },[]);
   const setQty=(service,val)=>{const n=Math.max(0,Math.min(99,isNaN(parseInt(val))?0:parseInt(val)));setQuantities(prev=>({...prev,[service]:n}));};
   const buildOrder=()=>{setCart(Object.entries(quantities).filter(([,q])=>q>0).map(([name,qty])=>({id:`${name}-${Date.now()}`,name,qty,unitPrice:activePrices[name]||0,subtotal:qty*(activePrices[name]||0)})));};
